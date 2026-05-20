@@ -22,7 +22,7 @@ export default function EnvWarning({ userEmail }) {
         {isFounder ? (
           <>
             <span className="font-bold">VITE_BACKEND_URL missing.</span>{' '}
-            Add <code className="font-mono bg-black/20 px-1 rounded">VITE_BACKEND_URL=https://terrellos-backend.onrender.com</code> to your environment variables.
+            Add <code className="font-mono bg-black/20 px-1 rounded">VITE_BACKEND_URL=https://terrellos-backend.fly.dev</code> to your environment variables.
           </>
         ) : (
           'Some features are temporarily unavailable. Please try again later.'
