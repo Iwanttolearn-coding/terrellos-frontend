@@ -76,3 +76,5 @@ The following emails always resolve to `super_admin / founder / unlimited`:
 - `millzterrell5@gmail.com`
 
 Enforced globally via `src/lib/founderAccess.js`
+
+<!-- build trigger: 2026-05-20T17:12 -->
