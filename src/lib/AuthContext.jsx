@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react'; // v2
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { getFounderAccess } from '@/lib/founderAccess';
