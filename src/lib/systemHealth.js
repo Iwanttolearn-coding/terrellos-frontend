@@ -6,7 +6,7 @@
  */
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'https://terrellos-backend.onrender.com';
+  import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
 
 // ── Internal state (module-level singleton) ───────────────────────────────────
 let _state = {
