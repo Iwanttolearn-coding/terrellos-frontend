@@ -1,37 +1,28 @@
-import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+/**
+ * ProtectedRoute.jsx — TM Dezigns AI Designer
+ * Uses resolveUserAccess() as the single source of truth.
+ * Founder ALWAYS passes. No loops. No external auth checks.
+ */
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
 
-const DefaultFallback = () => (
-  <div className="fixed inset-0 flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-  </div>
-);
+export default function ProtectedRoute({ children, requireFounder = false, requireAdmin = false }) {
+  const { user, isLoadingAuth } = useAuth();
+  const access = resolveUserAccess(user);
 
-export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement }) {
-  const { isAuthenticated, isLoadingAuth, authChecked, authError, checkUserAuth } = useAuth();
+  // Still loading — show nothing (prevents flash redirects)
+  if (isLoadingAuth) return null;
 
-  useEffect(() => {
-    if (!authChecked && !isLoadingAuth) {
-      checkUserAuth();
-    }
-  }, [authChecked, isLoadingAuth, checkUserAuth]);
-
-  if (isLoadingAuth || !authChecked) {
-    return fallback;
+  // Founder gates
+  if (requireFounder && !access.founder) {
+    return <Navigate to="/" replace />;
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    }
-    return unauthenticatedElement;
+  // Admin gates
+  if (requireAdmin && !access.canViewAdmin) {
+    return <Navigate to="/" replace />;
   }
 
-  if (!isAuthenticated) {
-    return unauthenticatedElement;
-  }
-
-  return <Outlet />;
+  return children;
 }
