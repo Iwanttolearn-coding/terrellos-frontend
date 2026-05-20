@@ -1,6 +1,6 @@
 /**
  * BrandFooter.jsx
- * "Pastor AI Connect — Powered by TM Dezigns"
+ * "TerrellOS — Powered by TM Dezigns"
  * Drop this into Layout, Dashboard, FounderCenter, etc.
  */
 import React from 'react'
@@ -17,7 +17,7 @@ export function BrandHeader({ minimal = false }) {
         fontWeight: 900, fontSize: minimal ? 13 : 15,
         color: '#fff', letterSpacing: '0.02em', whiteSpace: 'nowrap'
       }}>
-        ✝️ Pastor AI Connect
+        ✝️ TerrellOS
       </div>
       {!minimal && (
         <div style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.4 }}>
@@ -38,7 +38,7 @@ export function BrandFooter() {
       marginTop: 40
     }}>
       <div style={{ fontSize: 13, color: '#4b5563', lineHeight: 2 }}>
-        <span style={{ color: '#7c3aed', fontWeight: 800 }}>Pastor AI Connect</span>
+        <span style={{ color: '#7c3aed', fontWeight: 800 }}>TerrellOS</span>
         {' '}·{' '}
         <span style={{ color: '#6b7280' }}>Powered by</span>
         {' '}
