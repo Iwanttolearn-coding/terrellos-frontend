@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import CommandBar from '@/components/CommandBar';
 import NotificationCenter from '@/components/NotificationCenter';
 import { APP_VERSION } from '@/lib/env';
+import { useAuth } from '@/lib/AuthContext';
 import TopBarIdentity from '@/components/TopBarIdentity';
 import EnvBadge from '@/components/EnvBadge';
 import BackendStatusBar from '@/components/BackendStatusBar';
@@ -22,7 +23,7 @@ const NAV_ITEMS = [
   { path: '/projects', label: 'Projects', icon: FolderKanban },
   { path: '/upload-vault', label: 'Uploads', icon: HardDrive },
   { path: '/backend-manifest', label: 'Backend', icon: Cpu },
-  { path: '/tools/supabase-status', label: 'DB Status', icon: Database },
+
   { path: '/account', label: 'Account', icon: User },
   { path: '/settings', label: 'Settings', icon: Settings },
   { path: '/bible',             label: 'Bible Engine',   icon: BookOpen },
@@ -44,6 +45,7 @@ const NAV_ITEMS = [
 ];
 
 export default function Layout() {
+  const { access } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const location = useLocation();
@@ -122,7 +124,7 @@ export default function Layout() {
         <div className="px-6 py-4 border-t border-sidebar-border space-y-0.5">
           <div className="text-[10px] text-muted-foreground font-mono">Powered by TM Designz™</div>
           <div className="text-[10px] text-muted-foreground font-mono">TERRELL MILLS · FOUNDER</div>
-          <div className="text-[10px] text-muted-foreground/50 font-mono">v{APP_VERSION} · PRODUCTION</div>
+          <div className="text-[10px] text-muted-foreground/50 font-mono">vv9 · PRODUCTION</div>
         </div>
       </aside>
 
@@ -151,7 +153,7 @@ export default function Layout() {
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-glow" />
               <span className="text-xs text-muted-foreground font-mono">LIVE</span>
-              <span className="text-[10px] font-mono text-muted-foreground/50">v{APP_VERSION}</span>
+              <span className="text-[10px] font-mono text-muted-foreground/50">vv9</span>
             </div>
             <TopBarIdentity />
           </div>
