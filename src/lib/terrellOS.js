@@ -2,8 +2,9 @@
  * terrellOS.js — TerrellOS Unified API Layer
  * Backend: https://terrellos-backend.fly.dev
  */
-const BASE_URL = (typeof import !== 'undefined' && import.meta?.env?.VITE_BACKEND_URL)
-  || 'https://terrellos-backend.fly.dev'
+const BASE_URL =
+  import.meta.env.VITE_BACKEND_URL ||
+  'https://terrellos-backend.fly.dev'
 const TIMEOUT = 30000
 
 async function apiFetch(path, options = {}) {
