@@ -1,171 +1,178 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, FolderKanban, Cpu,
-  HardDrive, ScrollText, Settings, ShieldCheck, Activity,
-  Menu, X, Zap, ChevronRight, Wrench, Search, BookOpen, Layers, Terminal, DollarSign, User, Database, GitBranch, Rocket, Plug, Brain, Heart
+  LayoutDashboard, Settings, Activity, Menu, X, Zap,
+  ChevronRight, Wrench, Image, Scissors, Upload, Printer,
+  Palette, LayoutGrid, Crown, Shield, Terminal, User,
+  HelpCircle, CreditCard, Heart
 } from 'lucide-react';
 import MobileInstallBanner from '@/components/MobileInstallBanner';
 import { cn } from '@/lib/utils';
-import CommandBar from '@/components/CommandBar';
-import NotificationCenter from '@/components/NotificationCenter';
-import { APP_VERSION } from '@/lib/env';
 import { useAuth } from '@/lib/AuthContext';
-import TopBarIdentity from '@/components/TopBarIdentity';
-import EnvBadge from '@/components/EnvBadge';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import BackendStatusBar from '@/components/BackendStatusBar';
 
-const NAV_ITEMS = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/tools', label: 'Tools', icon: Wrench },
-  { path: '/analytics', label: 'Analytics', icon: Activity },
-  { path: '/live-logs', label: 'Live Logs', icon: ScrollText },
-  { path: '/projects', label: 'Projects', icon: FolderKanban },
-  { path: '/upload-vault', label: 'Uploads', icon: HardDrive },
-  { path: '/backend-manifest', label: 'Backend', icon: Cpu },
+// ── Navigation — TM Dezigns AI Designer ONLY. No cross-brand links. ────────
+const MAIN_NAV = [
+  { path: '/',                       label: 'Dashboard',       icon: LayoutDashboard },
+  { path: '/tools/ai-tools-studio',  label: 'Generate Image',  icon: Image },
+  { path: '/tools/tattoo-studio',    label: 'Tattoo Studio',   icon: Scissors },
+  { path: '/tools/creator-vault',    label: 'My Gallery',      icon: LayoutGrid },
+  { path: '/tools/creator-vault',    label: 'Upload Design',   icon: Upload },
+  { path: '/tools/print-readiness',  label: 'Print Readiness', icon: Printer },
+  { path: '/tools/style-advisor',    label: 'Style Advisor',   icon: Palette },
+  { path: '/tools/chat-engine',      label: 'AI Assistant',    icon: Zap },
+  { path: '/tools/voice-lab',        label: 'Voice Lab',       icon: Activity },
+  { path: '/projects',               label: 'Projects',        icon: LayoutGrid },
+  { path: '/account',                label: 'Account',         icon: User },
+  { path: '/billing',                label: 'Billing',         icon: CreditCard },
+  { path: '/settings',               label: 'Settings',        icon: Settings },
+  { path: '/help',                   label: 'Help',            icon: HelpCircle },
+];
 
-  { path: '/account', label: 'Account', icon: User },
-  { path: '/settings', label: 'Settings', icon: Settings },
-  { path: '/bible',             label: 'Bible Engine',   icon: BookOpen },
-  { path: '/ecosystem',         label: 'App Ecosystem',  icon: Layers },
-  { path: '/admin/live-console',label: 'Live Console',   icon: Terminal },
-  { path: '/admin/cost-manager',label: 'Cost Manager',   icon: DollarSign },
-  { path: '/admin/engine',      label: 'Engine Status',  icon: Cpu },
-  { path: '/workflow-builder',  label: 'Workflow Builder', icon: GitBranch },
-  { path: '/deployments',          label: 'Deploy Center', icon: Rocket },
-  { path: '/system-status',        label: 'System Status', icon: Activity },
-  { path: '/integrations',      label: 'Integrations',   icon: Plug },
-  { path: '/ai-models',         label: 'AI Models',      icon: Brain },
-  { path: '/founder',           label: 'Founder Center', icon: ShieldCheck },
-  { path: '/backend-status',    label: 'Backend Status', icon: Activity },
-  { path: '/system-logs',       label: 'System Logs',    icon: ScrollText },
-  { path: '/help',              label: 'Help',           icon: BookOpen },
-  { path: '/eternal-echo',       label: 'Eternal Echo',   icon: Heart },
-  { path: '/admin',             label: 'Admin',          icon: ShieldCheck },
+const ADMIN_NAV = [
+  { path: '/founder',               label: 'Founder Center',  icon: Crown },
+  { path: '/admin',                 label: 'Admin Panel',     icon: Shield },
+  { path: '/admin/live-console',    label: 'Live Console',    icon: Terminal },
+  { path: '/backend-status',        label: 'Backend Status',  icon: Activity },
+  { path: '/system-logs',           label: 'System Logs',     icon: Terminal },
 ];
 
 export default function Layout() {
-  const { access } = useAuth();
+  const { user } = useAuth();
+  const access = resolveUserAccess(user);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [cmdOpen, setCmdOpen] = useState(false);
   const location = useLocation();
 
-  useEffect(() => {
-    function onKey(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setCmdOpen(v => !v);
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  // Close sidebar on route change (mobile)
+  useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
+
+  const isActive = (path) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <CommandBar open={cmdOpen} onClose={() => setCmdOpen(false)} />
-      <NotificationCenter />
+    <div className="flex h-screen bg-gray-950 overflow-hidden">
+
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/70 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed lg:relative inset-y-0 left-0 z-30 w-64 flex flex-col transition-transform duration-300",
-        "bg-sidebar border-r border-sidebar-border",
+        "fixed lg:relative inset-y-0 left-0 z-30 w-60 flex flex-col transition-transform duration-300",
+        "bg-gray-900 border-r border-gray-800",
         sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-          <div className="w-8 h-8 rounded-lg gradient-purple-blue flex items-center justify-center glow-purple">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-800">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-purple-800 flex items-center justify-center shadow-lg shadow-purple-500/20 flex-shrink-0">
             <Zap className="w-4 h-4 text-white" />
           </div>
-          <div>
-            <div className="text-sm font-bold text-foreground tracking-tight">TerrellOS</div>
-            <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">AI Builder</div>
+          <div className="min-w-0">
+            <div className="text-sm font-black text-white truncate">TM Dezigns</div>
+            <div className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">AI Designer</div>
           </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="ml-auto lg:hidden text-muted-foreground hover:text-foreground"
-          >
+          <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-gray-500 hover:text-white">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 py-4 overflow-y-auto scrollbar-dark">
-          {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-            const active = path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
-            return (
-              <Link
-                key={path}
-                to={path}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 mx-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group",
-                  active
-                    ? "bg-primary/15 text-primary glow-purple"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
-                )}
-              >
-                <Icon className={cn("w-4 h-4 flex-shrink-0", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                <span className="flex-1">{label}</span>
-                {active && <ChevronRight className="w-3 h-3 text-primary" />}
-              </Link>
-            );
-          })}
+        {/* Main nav */}
+        <nav className="flex-1 py-3 overflow-y-auto">
+          <div className="px-3 space-y-0.5">
+            {MAIN_NAV.map(({ path, label, icon: Icon }) => {
+              const active = isActive(path);
+              return (
+                <Link key={path + label} to={path}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                    active
+                      ? "bg-violet-600/20 text-violet-300 border border-violet-500/30"
+                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                  )}>
+                  <Icon className={cn("w-4 h-4 flex-shrink-0", active ? "text-violet-400" : "text-gray-500")} />
+                  <span className="flex-1 truncate">{label}</span>
+                  {active && <ChevronRight className="w-3 h-3 text-violet-400" />}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Founder/Admin nav — only shown to founders/admins */}
+          {access.canViewAdmin && (
+            <div className="mt-4 pt-3 border-t border-gray-800 px-3 space-y-0.5">
+              <p className="text-[10px] text-gray-600 uppercase tracking-wider px-3 pb-1">
+                {access.founder ? '👑 Founder' : 'Admin'}
+              </p>
+              {ADMIN_NAV.map(({ path, label, icon: Icon }) => {
+                const active = isActive(path);
+                return (
+                  <Link key={path} to={path}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      active
+                        ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                        : "text-gray-500 hover:bg-gray-800 hover:text-gray-300"
+                    )}>
+                    <Icon className={cn("w-4 h-4 flex-shrink-0", active ? "text-amber-400" : "text-gray-600")} />
+                    <span className="flex-1 truncate">{label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </nav>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-sidebar-border space-y-0.5">
-          <div className="text-[10px] text-muted-foreground font-mono">Powered by TM Designz™</div>
-          <div className="text-[10px] text-muted-foreground font-mono">TERRELL MILLS · FOUNDER</div>
-          <div className="text-[10px] text-muted-foreground/50 font-mono">vv9 · PRODUCTION</div>
+        <div className="px-5 py-4 border-t border-gray-800">
+          {access.founder ? (
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+                <Crown className="w-3 h-3 text-amber-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-amber-300 truncate">{access.displayName}</p>
+                <p className="text-[10px] text-amber-500/60">Founder · Super Admin</p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-[10px] text-gray-600 font-mono">TM Dezigns AI Designer</p>
+              <p className="text-[10px] text-gray-700 font-mono">Powered by TerrellOS AI</p>
+            </div>
+          )}
         </div>
       </aside>
 
-      {/* Main */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header className="flex items-center gap-4 px-4 lg:px-8 py-4 border-b border-border bg-card/50 backdrop-blur-sm">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-muted-foreground hover:text-foreground cursor-pointer"
-            aria-label="Open menu"
-          >
+        <header className="flex items-center gap-3 px-4 py-3 bg-gray-900 border-b border-gray-800 flex-shrink-0">
+          <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-400 hover:text-white">
             <Menu className="w-5 h-5" />
           </button>
-          {/* Cmd+K trigger */}
-          <button
-            onClick={() => setCmdOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-secondary/40 hover:bg-secondary/80 transition-colors text-sm text-muted-foreground group"
-          >
-            <Search className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline text-xs">Search…</span>
-            <kbd className="hidden sm:inline text-[10px] font-mono bg-background/60 px-1 py-0.5 rounded border border-border">⌘K</kbd>
-          </button>
-          <div className="flex items-center gap-3 ml-auto">
-            <EnvBadge className="hidden sm:inline-flex" />
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-glow" />
-              <span className="text-xs text-muted-foreground font-mono">LIVE</span>
-              <span className="text-[10px] font-mono text-muted-foreground/50">vv9</span>
-            </div>
-            <TopBarIdentity />
+          <BackendStatusBar />
+          <div className="ml-auto flex items-center gap-2">
+            {access.founder && (
+              <Link to="/founder"
+                className="hidden sm:flex items-center gap-1.5 text-xs bg-amber-500/10 border border-amber-500/20 text-amber-300 px-3 py-1.5 rounded-lg hover:bg-amber-500/20 transition-all">
+                <Crown className="w-3 h-3" /> Founder
+              </Link>
+            )}
+            <Link to="/account"
+              className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 hover:border-gray-600 flex items-center justify-center text-gray-400 hover:text-white transition-all">
+              <User className="w-4 h-4" />
+            </Link>
           </div>
         </header>
 
-        {/* Page */}
-        <main className="flex-1 overflow-y-auto scrollbar-dark">
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto">
+          <MobileInstallBanner />
           <Outlet />
         </main>
       </div>
-      <MobileInstallBanner />
-      <BackendStatusBar />
     </div>
   );
 }
