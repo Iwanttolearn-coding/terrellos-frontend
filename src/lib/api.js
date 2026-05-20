@@ -24,6 +24,7 @@ export async function apiFetch(path, options = {}) {
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
+      'X-App-ID': import.meta.env.VITE_APP_ID || 'terrellos',
         ...(options.headers || {}),
       },
     });
