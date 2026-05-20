@@ -1,5 +1,5 @@
 /**
- * useTranscribe.js — TerrellOS / Heavenly Eternal Echo
+ * useTranscribe.js — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
  * Real-time audio transcription via OpenAI Whisper (Render backend).
  * Routes:  POST /v1/memory/transcribe       (multipart file upload)
