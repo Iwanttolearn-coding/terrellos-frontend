@@ -1,5 +1,5 @@
 /**
- * useBackendStatus.js — TerrellOS / Heavenly Eternal Echo
+ * useBackendStatus.js — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
  * Hook for polling /status from the Render backend.
  * Returns capability flags: chat, voice, images, transcribe, memory.
