@@ -1,5 +1,5 @@
 /**
- * useImageGen.js — TerrellOS / Heavenly Eternal Echo
+ * useImageGen.js — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
  * DALL-E 3 image generation via Render backend.
  * Routes:  POST /v1/images/generate
