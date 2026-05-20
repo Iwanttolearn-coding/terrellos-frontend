@@ -7,7 +7,7 @@
 export const ECOSYSTEM_APPS = [
   {
     id: 'eternalecho',
-    name: 'Heavenly Eternal Echo',
+    name: 'TerrellOS',
     tagline: 'AI memorial & memory preservation platform',
     emoji: '🕊️',
     color: 'from-amber-500 to-orange-700',
@@ -23,7 +23,7 @@ export const ECOSYSTEM_APPS = [
   },
   {
     id: 'pastorai',
-    name: 'Pastor AI Connect',
+    name: 'TerrellOS',
     tagline: 'AI-powered pastoral ministry & sermon tools',
     emoji: '⛪',
     color: 'from-violet-600 to-purple-800',
