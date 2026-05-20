@@ -1,5 +1,5 @@
 /**
- * TerrellOS / Heavenly Eternal Echo
+ * TerrellOS / TerrellOS
  * Memory System Entity Definitions
  * These define the structured memory architecture — not random chat logs.
  */
