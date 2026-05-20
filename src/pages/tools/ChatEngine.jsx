@@ -12,8 +12,8 @@ import { cn } from '@/lib/utils';
 import ModelBadge from '@/components/ModelBadge';
 import { getModelForTool } from '@/lib/modelResolver';
 
-// Direct Render backend URL — uses VITE_API_URL env var if set, fallback to hardcoded
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://terrellos-backend.onrender.com";
+// Direct Render backend URL — uses VITE_BACKEND_URL env var if set, fallback to hardcoded
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "https://terrellos-backend.fly.dev";
 
 // ── Message bubble ────────────────────────────────────────────────────────────
 function Bubble({ role, content, isStreaming }) {
