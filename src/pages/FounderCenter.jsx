@@ -1,147 +1,187 @@
-import React, { useState, useEffect } from 'react'
-import { resolveUserAccess } from '../lib/founderAccess'
-import { healthCheck } from '../lib/terrellOS'
-import { BrandHeader, BrandFooter } from '../components/BrandFooter'
+/**
+ * FounderCenter.jsx — TerrellOS Founder Command Center
+ * Full system visibility: health, modules, ecosystem, CORS.
+ */
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
+import { healthCheck } from '@/lib/terrellOS';
+import {
+  Crown, RefreshCw, CheckCircle, XCircle, Globe, Terminal,
+  Shield, Cpu, Zap, Settings, Activity, BarChart3,
+  Wrench, BookOpen, Layers, DollarSign, GitBranch, Rocket
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const FOUNDER_EMAIL = 'millzterrell210@icloud.com'
+const BACKEND = 'https://terrellos-backend.fly.dev';
 
-const fakeUser = { email: FOUNDER_EMAIL, full_name: 'Terrell Mills' }
-const access = resolveUserAccess(fakeUser)
+const FOUNDER_TOOLS = [
+  { label: 'System Diagnostics',   to: '/system-status',              icon: Activity },
+  { label: 'Super Admin',           to: '/super-admin',                icon: Shield },
+  { label: 'Live Console',          to: '/admin/live-console',         icon: Terminal },
+  { label: 'Manage AI Tools',       to: '/tools/manage-ai-tools',      icon: Wrench },
+  { label: 'Cost Manager',          to: '/admin/cost-manager',         icon: DollarSign },
+  { label: 'Deployment Center',     to: '/founder/deployment-center',  icon: Rocket },
+  { label: 'Workflow Builder',      to: '/workflow-builder',           icon: GitBranch },
+  { label: 'Analytics',             to: '/analytics',                  icon: BarChart3 },
+  { label: 'Bible Engine',          to: '/bible',                      icon: BookOpen },
+  { label: 'App Ecosystem',         to: '/ecosystem',                  icon: Layers },
+  { label: 'Backend Manifest',      to: '/backend-manifest',           icon: Cpu },
+  { label: 'Settings',              to: '/settings',                   icon: Settings },
+];
 
-export default function FounderCommandCenter() {
-  const [health, setHealth] = useState(null)
-  const [checking, setChecking] = useState(true)
-  const [lastChecked, setLastChecked] = useState(null)
+const ECOSYSTEM_APPS = [
+  { id: 'terrellos',             name: 'TerrellOS',               domain: 'app.tm-dezigns.com',        color: 'from-violet-600 to-purple-800' },
+  { id: 'pastor-ai-connect',     name: 'Pastor AI Connect',       domain: 'pastoraiconnect.com',        color: 'from-amber-600 to-orange-800' },
+  { id: 'heavenly-eternal-echo', name: 'Heavenly Eternal Echoes', domain: 'heavenlyeternalechoes.com',  color: 'from-blue-600 to-cyan-800' },
+  { id: 'all-around-customs',    name: 'All Around Customs',      domain: 'allaroundcustoms.com',       color: 'from-orange-600 to-red-800' },
+  { id: 'kindred-love-birds',    name: 'Kindred Love Birds',      domain: 'kindredlovebirds.com',       color: 'from-rose-600 to-pink-800' },
+  { id: 'residentsync-ai',       name: 'ResidentSync AI',         domain: 'residentsyncai.com',         color: 'from-green-600 to-emerald-800' },
+];
 
-  const runHealthCheck = async () => {
-    setChecking(true)
+export default function FounderCenter() {
+  const { user, access } = useAuth();
+  const [health, setHealth] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [lastChecked, setLastChecked] = useState(null);
+
+  const fetchHealth = async () => {
+    setLoading(true);
     try {
-      const d = await healthCheck()
-      setHealth(d)
+      const h = await healthCheck();
+      setHealth(h);
     } catch {
-      setHealth({ status: 'offline', error: true })
+      setHealth({ status: 'offline', success: false });
     }
-    setLastChecked(new Date().toLocaleTimeString())
-    setChecking(false)
+    setLastChecked(new Date().toLocaleTimeString());
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchHealth(); }, []);
+
+  const online = health?.success || health?.status === 'healthy';
+
+  if (!access?.founder) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8">
+        <Shield className="w-12 h-12 text-muted-foreground" />
+        <p className="text-lg font-bold text-foreground">Founder Access Required</p>
+        <p className="text-sm text-muted-foreground text-center">This area is restricted to <strong>millzterrell5@gmail.com</strong> and <strong>millzterrell210@icloud.com</strong></p>
+        <Link to="/login" className="text-sm text-primary underline">Sign in as Founder →</Link>
+      </div>
+    );
   }
 
-  useEffect(() => { runHealthCheck() }, [])
-
-  const Card = ({ icon, label, value, color = '#22c55e' }) => (
-    <div style={{
-      background: '#111827', border: '1px solid #1f2937', borderRadius: 10,
-      padding: 16, display: 'flex', flexDirection: 'column', gap: 6
-    }}>
-      <div style={{ fontSize: 22 }}>{icon}</div>
-      <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-      <div style={{ fontSize: 14, color, fontWeight: 700 }}>{value}</div>
-    </div>
-  )
-
-  const backendStatus = checking ? '🟡 Checking...' : health?.error ? '🔴 Offline' : '🟢 Online'
-  const openaiStatus = health?.openai_configured ? '🟢 Ready' : '🔴 Missing Key'
-  const voiceStatus = health?.voice_synthesis === 'ready' ? '🟢 Ready' : '⚠️ ' + (health?.voice_synthesis || 'Unknown')
-
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px', minHeight: '100vh', background: '#0a0a0f' }}>
-
+    <div className="p-4 lg:p-8 max-w-6xl mx-auto space-y-8">
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <BrandHeader />
-        <h1 style={{ color: '#f9fafb', fontSize: 26, fontWeight: 900, margin: '16px 0 4px' }}>
-          ⚡ Founder Command Center
-        </h1>
-        <p style={{ color: '#6b7280', margin: 0, fontSize: 14 }}>
-          Full system control · {access.displayPlan} · {access.role}
-        </p>
-      </div>
-
-      {/* Founder Badge */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1e1b4b, #0f172a)',
-        border: '1px solid #4f46e5', borderRadius: 12, padding: 16, marginBottom: 24,
-        display: 'flex', alignItems: 'center', gap: 12
-      }}>
-        <div style={{ fontSize: 36 }}>👑</div>
-        <div>
-          <div style={{ color: '#a78bfa', fontWeight: 800, fontSize: 16 }}>Terrell Mills — Founder</div>
-          <div style={{ color: '#6b7280', fontSize: 12 }}>{FOUNDER_EMAIL} · super_admin · Full Access · All Tools Unlocked</div>
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+            <Crown className="w-6 h-6 text-amber-400" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-foreground">Founder Command Center</h1>
+            <p className="text-xs text-amber-400/70 mt-0.5">TerrellOS v9 · TM Dezigns Ecosystem</p>
+          </div>
         </div>
-        <div style={{ marginLeft: 'auto', background: '#4f46e5', color: '#fff', borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 700 }}>
-          ✦ FOUNDER
+        <button onClick={fetchHealth} disabled={loading}
+          className="flex items-center gap-2 bg-card border border-border hover:border-primary/40 rounded-xl px-4 py-2.5 text-sm transition-all">
+          <RefreshCw className={cn('w-4 h-4 text-muted-foreground', loading && 'animate-spin')} />
+          {loading ? 'Checking…' : `Last: ${lastChecked || '—'}`}
+        </button>
+      </div>
+
+      {/* Backend status card */}
+      <div className={cn(
+        'rounded-2xl border p-5',
+        online ? 'bg-green-950/20 border-green-500/20' : 'bg-red-950/20 border-red-500/20'
+      )}>
+        <div className="flex items-center gap-3 mb-4">
+          {online
+            ? <CheckCircle className="w-5 h-5 text-green-400" />
+            : <XCircle className="w-5 h-5 text-red-400" />}
+          <div>
+            <p className={cn('font-bold text-sm', online ? 'text-green-300' : 'text-red-300')}>
+              {online ? '🟢 Backend Online' : '🔴 Backend Offline'}
+            </p>
+            <p className="text-xs text-muted-foreground">{BACKEND}</p>
+          </div>
+          {health?.version && (
+            <span className="ml-auto text-xs bg-card border border-border px-2 py-1 rounded-lg text-muted-foreground">
+              v{health.version}
+            </span>
+          )}
         </div>
+        {online && health && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'OpenAI',      ok: health.openai_configured,     val: health.openai_configured    ? 'Configured' : 'Missing key' },
+              { label: 'ElevenLabs', ok: health.elevenlabs_configured, val: health.elevenlabs_configured ? 'Configured' : 'Missing key' },
+              { label: 'Image Gen',  ok: health.image_generation === 'ready', val: health.image_generation || '—' },
+              { label: 'Voice',      ok: health.voice_synthesis === 'ready',  val: health.voice_synthesis  || '—' },
+            ].map(({ label, ok, val }) => (
+              <div key={label} className="bg-black/20 rounded-xl p-3">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className={cn('text-sm font-semibold mt-1', ok ? 'text-green-400' : 'text-red-400')}>{val}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Status Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px,1fr))', gap: 12, marginBottom: 24 }}>
-        <Card icon="🖥️" label="Backend" value={backendStatus} color={health?.error ? '#ef4444' : '#22c55e'} />
-        <Card icon="🤖" label="OpenAI" value={openaiStatus} color={health?.openai_configured ? '#22c55e' : '#ef4444'} />
-        <Card icon="🎙️" label="Voice / TTS" value={voiceStatus} color={health?.voice_synthesis === 'ready' ? '#22c55e' : '#f59e0b'} />
-        <Card icon="✝️" label="Sermon Engine" value={health?.error ? '🔴 Offline' : '🟢 Ready'} color={health?.error ? '#ef4444' : '#22c55e'} />
-        <Card icon="🗄️" label="Database" value="🟢 Connected" color="#22c55e" />
-        <Card icon="👑" label="Founder Override" value="🟢 Active" color="#a78bfa" />
-        <Card icon="📡" label="Version" value={health?.version || 'Loading...'} color="#60a5fa" />
-        <Card icon="🌍" label="Environment" value={health?.environment || 'production'} color="#34d399" />
-      </div>
-
-      {/* Action Buttons */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 28 }}>
-        {[
-          { label: '🔄 Run Diagnostics', action: runHealthCheck },
-          { label: '📖 API Docs', href: 'https://terrellos-backend.fly.dev/docs' },
-          { label: '🚀 Fly.io Dashboard', href: 'https://fly.io/apps/terrellos-backend' },
-          { label: '🌐 Live App', href: 'https://terrellos.vercel.app' },
-        ].map((btn, i) => btn.href ? (
-          <a key={i} href={btn.href} target="_blank" rel="noreferrer" style={{
-            background: '#1f2937', color: '#d1d5db', borderRadius: 8,
-            padding: '10px 18px', fontSize: 13, fontWeight: 600,
-            textDecoration: 'none', border: '1px solid #374151'
-          }}>{btn.label}</a>
-        ) : (
-          <button key={i} onClick={btn.action} style={{
-            background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', color: '#fff',
-            border: 'none', borderRadius: 8, padding: '10px 18px',
-            fontSize: 13, fontWeight: 600, cursor: 'pointer'
-          }}>{btn.label}</button>
-        ))}
-      </div>
-
-      {/* Backend URL Panel */}
-      <div style={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 10, padding: 16, marginBottom: 16 }}>
-        <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase' }}>Backend URL</div>
-        <div style={{ color: '#60a5fa', fontSize: 14, fontFamily: 'monospace' }}>https://terrellos-backend.fly.dev</div>
-        {lastChecked && <div style={{ color: '#4b5563', fontSize: 11, marginTop: 6 }}>Last checked: {lastChecked}</div>}
-      </div>
-
-      {/* Quick Links */}
-      <div style={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 10, padding: 16 }}>
-        <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase' }}>Quick Navigation</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px,1fr))', gap: 8 }}>
-          {[
-            ['/sermon-prep', '✝️ Sermon Prep'],
-            ['/discipleship', '📖 Discipleship'],
-            ['/denominations', '⛪ Denominations'],
-            ['/church-history', '📜 Church History'],
-            ['/martyrs', '🕊️ Martyrs'],
-            ['/christian-heroes', '⭐ Christian Heroes'],
-            ['/apologetics', '🛡️ Apologetics'],
-            ['/theology-library', '📚 Theology Library'],
-            ['/bible-college', '🎓 Bible College'],
-            ['/live-transcribe', '🎙️ Live Transcribe'],
-            ['/leadership-training', '👑 Leadership'],
-            ['/research/freemasonry', '🔍 Research'],
-          ].map(([path, label]) => (
-            <a key={path} href={path} style={{
-              background: '#1f2937', color: '#d1d5db', borderRadius: 8,
-              padding: '8px 12px', fontSize: 12, fontWeight: 600,
-              textDecoration: 'none', textAlign: 'center',
-              border: '1px solid #374151', display: 'block'
-            }}>{label}</a>
+      {/* Quick tool grid */}
+      <div>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Founder Tools</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {FOUNDER_TOOLS.map(({ label, to, icon: Icon }) => (
+            <Link key={to} to={to}
+              className="group card-glass rounded-xl p-4 flex items-center gap-3 hover:border-amber-500/30 transition-all">
+              <Icon className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform flex-shrink-0" />
+              <span className="text-xs font-medium text-foreground group-hover:text-amber-300 transition-colors">{label}</span>
+            </Link>
           ))}
         </div>
       </div>
 
-      <BrandFooter />
+      {/* Ecosystem apps */}
+      <div>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Ecosystem — 1 Backend · 6 Apps</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {ECOSYSTEM_APPS.map(app => (
+            <div key={app.id} className="card-glass rounded-xl p-4 flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${app.color} flex items-center justify-center flex-shrink-0`}>
+                <Globe className="w-4 h-4 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{app.name}</p>
+                <a href={`https://${app.domain}`} target="_blank" rel="noreferrer"
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors truncate block">
+                  {app.domain}
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick API links */}
+      <div className="card-glass rounded-2xl p-5">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Backend Direct Links</h2>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: 'Health',  href: `${BACKEND}/health` },
+            { label: 'Docs',    href: `${BACKEND}/docs` },
+            { label: 'Status',  href: `${BACKEND}/status` },
+            { label: 'Ecosystem', href: `${BACKEND}/v1/ecosystem` },
+          ].map(({ label, href }) => (
+            <a key={href} href={href} target="_blank" rel="noreferrer"
+              className="text-xs bg-card border border-border hover:border-primary/40 text-muted-foreground hover:text-foreground px-4 py-2 rounded-lg transition-all">
+              {label} ↗
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
-  )
+  );
 }
