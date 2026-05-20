@@ -1,14 +1,14 @@
 /**
- * api.js — TerrellOS / Heavenly Eternal Echo
+ * api.js — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
  * Global API config. ALL backend calls go through here.
- * Backend: https://terrellos-backend.onrender.com
+ * Backend: https://terrellos-backend.fly.dev
  * ─────────────────────────────────────────────────────────────────
  */
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  'https://terrellos-backend.onrender.com';
+  import.meta.env.VITE_BACKEND_URL ||
+  'https://terrellos-backend.fly.dev';
 
 const TIMEOUT_MS = 30_000;
 
