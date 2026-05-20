@@ -218,50 +218,52 @@ export default function Billing() {
           <Shield className="w-4 h-4 text-muted-foreground" />
           <p className="font-semibold text-sm text-foreground">Your Plan Includes</p>
         </div>
-        <ul className="space-y-1.5">
-          {access?.isFounder ? (
-            [
-              'Unlimited AI credits',
-              'All AI models (GPT-4o, custom)',
-              'All tools unlocked',
-              'Unlimited projects',
-              'Full admin & founder access',
-              'Priority processing',
-              'System diagnostics',
-              'Billing override',
-            ]
-          ) : planKey === 'starter' ? [
-              '1,000 AI credits / month',
-              'Text & code generation',
-              'AI Builder access',
-              'Up to 3 projects',
-              '7-day credit rollover',
-              'Community support',
+        {(() => {
+          const features = access?.isFounder ? [
+            'Unlimited AI credits',
+            'All AI models (GPT-4o, custom)',
+            'All tools unlocked',
+            'Unlimited projects',
+            'Full admin & founder access',
+            'Priority processing',
+            'System diagnostics',
+            'Billing override',
+          ] : planKey === 'starter' ? [
+            '1,000 AI credits / month',
+            'Text & code generation',
+            'AI Builder access',
+            'Up to 3 projects',
+            '7-day credit rollover',
+            'Community support',
           ] : planKey === 'enterprise' ? [
-              '20,000 AI credits / month',
-              'All AI models',
-              'Unlimited projects',
-              'Team accounts',
-              'SLA (99.9% uptime)',
-              '90-day credit rollover',
-              'Dedicated support',
+            '20,000 AI credits / month',
+            'All AI models',
+            'Unlimited projects',
+            'Team accounts',
+            'SLA (99.9% uptime)',
+            '90-day credit rollover',
+            'Dedicated support',
           ] : [
-              '5,000 AI credits / month',
-              'GPT-4o + advanced models',
-              'Unlimited projects',
-              'API access + webhooks',
-              'Deployment tools',
-              'Live sandbox',
-              '30-day credit rollover',
-              'Priority support',
-          ]}
-          .map((f, i) => (
-            <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-              {f}
-            </li>
-          ))}
-        </ul>
+            '5,000 AI credits / month',
+            'GPT-4o + advanced models',
+            'Unlimited projects',
+            'API access + webhooks',
+            'Deployment tools',
+            'Live sandbox',
+            '30-day credit rollover',
+            'Priority support',
+          ];
+          return (
+            <ul className="space-y-1.5">
+              {features.map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          );
+        })()}
       </div>
 
       {/* Upgrade CTA — not shown for founders or enterprise */}
