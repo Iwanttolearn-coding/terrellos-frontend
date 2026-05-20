@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { isFounderEmail, getFounderPermissions } from '@/lib/founderIdentity';
+import { useAuth } from '@/lib/AuthContext';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import { getEffectiveAccess } from '@/lib/ownerConfig';
 import { Cpu, FolderKanban, HardDrive, ScrollText, Activity, ShieldCheck, Smile, Mic, Brain, MessageSquare, Database, Settings2, ChevronRight, GitBranch, FileCode, Layers, Terminal, DollarSign, Rocket, BarChart2, Zap, Globe, CreditCard, Heart, TrendingDown } from 'lucide-react';
 
@@ -42,24 +43,20 @@ const TOOLS = [
 ];
 
 export default function Tools() {
-  const [access, setAccess] = useState(null);
+  const [access, setAccess] = useState({ isSuperAdmin: false, founder: false, toolsAccess: false });
 
+  const { user, access: authAccess, isLoadingAuth } = useAuth();
+  
   useEffect(() => {
-    // Resolve founder access without Base44 SDK
-    const email = localStorage.getItem('user_email') || '';
-    if (isFounderEmail(email)) {
-      setAccess({ ...getFounderPermissions(), isSuperAdmin: true });
-    } else {
-      setAccess({ role: 'user', isSuperAdmin: false });
-    }
-  }, []);
+    setAccess(authAccess);
+  }, [authAccess]);
 
   return (
     <div className="p-4 lg:p-8 max-w-2xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold gradient-text">Tool Launcher</h1>
         <p className="text-sm text-muted-foreground mt-1">Select a tool to get started</p>
-        {access?.isSuperAdmin && (
+        {access?.isSuperAdmin || access?.founder && (
           <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/30">
             <ShieldCheck className="w-3 h-3 text-primary" />
             <span className="text-xs font-mono text-primary font-bold">SUPER ADMIN — ALL ACCESS ENABLED</span>
