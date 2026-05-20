@@ -134,3 +134,41 @@ export const generatePrayer = (p) =>
 
 export const generateLessonPlan = (p) =>
   apiFetch('/v1/pastor/lesson-plan', { method: 'POST', body: JSON.stringify(p) })
+export const getSystemLogs = async () => {
+  try {
+    const health = await healthCheck()
+
+    return {
+      success: true,
+      logs: [
+        {
+          id: 'backend-health',
+          level: health?.status === 'healthy' ? 'success' : 'warning',
+          service: 'TerrellOS Backend',
+          message: `Backend status: ${health?.status || 'unknown'}`,
+          timestamp: new Date().toISOString()
+        },
+        {
+          id: 'backend-url',
+          level: 'info',
+          service: 'API Layer',
+          message: `Connected backend: ${BACKEND_BASE_URL}`,
+          timestamp: new Date().toISOString()
+        }
+      ]
+    }
+  } catch (error) {
+    return {
+      success: false,
+      logs: [
+        {
+          id: 'backend-error',
+          level: 'error',
+          service: 'TerrellOS Backend',
+          message: error?.message || 'Failed to load system logs',
+          timestamp: new Date().toISOString()
+        }
+      ]
+    }
+  }
+}
