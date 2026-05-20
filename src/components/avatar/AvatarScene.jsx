@@ -1,5 +1,5 @@
 /**
- * AvatarScene.jsx — TerrellOS / Heavenly Eternal Echo
+ * AvatarScene.jsx — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
  * Core cinematic 3D avatar engine.
  * React Three Fiber + Drei + Postprocessing.
