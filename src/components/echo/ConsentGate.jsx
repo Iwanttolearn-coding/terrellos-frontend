@@ -74,7 +74,7 @@ export default function ConsentGate({ onConsent, onDecline }) {
           {/* Title */}
           <div className="space-y-3">
             <h1 className="text-4xl font-bold text-white tracking-tight">
-              Heavenly Eternal Echo
+              TerrellOS
             </h1>
             <p className="text-lg text-purple-200/80 font-light leading-relaxed">
               A sacred space to preserve your voice, your stories, and your spirit.
