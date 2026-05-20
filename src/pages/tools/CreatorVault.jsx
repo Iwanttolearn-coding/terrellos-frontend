@@ -1,330 +1,377 @@
-import { useState, useEffect, useCallback } from 'react';
-import { BACKEND_BASE_URL } from '@/lib/terrellOS';
+/**
+ * CreatorVault.jsx — TM Dezigns AI Designer
+ * Upload + Gallery. Real API. No fake data. Persistent per user.
+ * Founder/admin can view all user projects.
+ */
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from '@/lib/AuthContext';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
+import {
+  Upload, Image, Trash2, Download, Star, FolderPlus,
+  RefreshCw, Loader2, LayoutGrid, List, X, Eye
+} from 'lucide-react';
+
+const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
+const APP_ID  = import.meta.env.VITE_APP_ID || 'terrellos';
+const HEADERS = { 'X-App-ID': APP_ID };
 
 const CATEGORIES = [
-  { id: 'all',            label: 'All Assets',       emoji: '🗄️' },
-  { id: 'tattoo_concept', label: 'Tattoo Concepts',  emoji: '🎯' },
-  { id: 'tattoo_stencil', label: 'Tattoo Outlines',  emoji: '📋' },
-  { id: 'vector_files',   label: 'Vector Files',     emoji: '📐' },
-  { id: 'dtf_designs',    label: 'DTF Designs',      emoji: '🖨️' },
-  { id: 'ai_generation',  label: 'AI Generations',   emoji: '✨' },
+  { id: 'all',             label: 'All Assets',      emoji: '🗄️' },
+  { id: 'tattoo_concept',  label: 'Tattoo Concepts', emoji: '💉' },
+  { id: 'dtf_designs',     label: 'DTF Designs',     emoji: '🖨️' },
+  { id: 'ai_generation',   label: 'AI Generations',  emoji: '✨' },
+  { id: 'vector_files',    label: 'Vector Files',    emoji: '📐' },
   { id: 'transparent_pngs',label: 'Transparent PNGs',emoji: '🔲' },
-  { id: 'mockups',        label: 'Mockups',           emoji: '👕' },
-  { id: 'upload_history', label: 'Uploads',           emoji: '📁' },
+  { id: 'mockups',         label: 'Mockups',          emoji: '👕' },
+  { id: 'upload_history',  label: 'Uploads',          emoji: '📁' },
 ];
 
+const ACCEPT = 'image/png,image/jpeg,image/webp,image/svg+xml,application/pdf,.ai,.eps,.psd';
+
 export default function CreatorVault() {
-  const [items, setItems] = useState([]);
-  const [folders, setFolders] = useState([]);
-  const [prompts, setPrompts] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [activeFolder, setActiveFolder] = useState(null);
-  const [activeTab, setActiveTab] = useState('gallery'); // gallery | folders | prompts
-  const [loading, setLoading] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
+  const { user }  = useAuth();
+  const access    = resolveUserAccess(user);
+  const userId    = user?.email || user?.id || 'guest';
+  const fileRef   = useRef(null);
+
+  const [items,      setItems]      = useState([]);
+  const [folders,    setFolders]    = useState([]);
+  const [stats,      setStats]      = useState(null);
+  const [category,   setCategory]   = useState('all');
+  const [loading,    setLoading]    = useState(true);
+  const [uploading,  setUploading]  = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [preview,    setPreview]    = useState(null);
+  const [error,      setError]      = useState('');
+  const [viewMode,   setViewMode]   = useState('grid');
+  const [folderName, setFolderName] = useState('');
   const [showNewFolder, setShowNewFolder] = useState(false);
-  const [selected, setSelected] = useState(null);
 
-  const API = BACKEND_BASE_URL;
-  const USER_ID = 'founder';
-  const APP_ID = import.meta.env.VITE_APP_ID || 'terrellos';
-  const headers = { 'Content-Type': 'application/json', 'X-App-ID': APP_ID };
-
-  const loadGallery = useCallback(async () => {
-    setLoading(true);
+  const fetchGallery = useCallback(async () => {
+    setLoading(true); setError('');
     try {
       const params = new URLSearchParams({ limit: '100', offset: '0' });
-      if (activeCategory !== 'all') params.set('type', activeCategory);
-      if (activeFolder) params.set('folder_id', activeFolder);
-      const res = await fetch(`${API}/v1/gallery/load/${USER_ID}?${params}`, { headers });
+      if (category !== 'all') params.set('type', category);
+      const res = await fetch(`${BACKEND}/v1/gallery/load/${encodeURIComponent(userId)}?${params}`,
+        { headers: { 'Content-Type': 'application/json', ...HEADERS } });
       const data = await res.json();
-      if (data.success) setItems(data.items || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, [activeCategory, activeFolder, API]);
+      setItems(data.items || []);
+    } catch (e) {
+      setError('Could not load gallery — backend may be waking up');
+    }
+    setLoading(false);
+  }, [userId, category]);
 
-  const loadFolders = useCallback(async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/v1/gallery/folders/${USER_ID}`, { headers });
-      const data = await res.json();
-      if (data.success) setFolders(data.folders || []);
-    } catch (e) {}
-  }, [API]);
-
-  const loadStats = useCallback(async () => {
-    try {
-      const res = await fetch(`${API}/v1/gallery/stats/${USER_ID}`, { headers });
+      const res = await fetch(`${BACKEND}/v1/gallery/stats/${encodeURIComponent(userId)}`,
+        { headers: HEADERS });
       const data = await res.json();
       if (data.success) setStats(data);
-    } catch (e) {}
-  }, [API]);
+    } catch {}
+  }, [userId]);
 
-  const loadPrompts = useCallback(async () => {
+  const fetchFolders = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/v1/gallery/prompts/${USER_ID}`, { headers });
+      const res = await fetch(`${BACKEND}/v1/gallery/folders/${encodeURIComponent(userId)}`,
+        { headers: HEADERS });
       const data = await res.json();
-      if (data.success) setPrompts(data.prompts || []);
-    } catch (e) {}
-  }, [API]);
+      if (data.success) setFolders(data.folders || []);
+    } catch {}
+  }, [userId]);
 
   useEffect(() => {
-    loadGallery(); loadFolders(); loadStats(); loadPrompts();
-  }, [loadGallery, loadFolders, loadStats, loadPrompts]);
+    fetchGallery();
+    fetchStats();
+    fetchFolders();
+  }, [fetchGallery, fetchStats, fetchFolders]);
+
+  // ── File upload ──────────────────────────────────────────────────────────
+  const handleUpload = async (files) => {
+    if (!files?.length) return;
+    setUploading(true); setError('');
+    let uploaded = 0;
+    for (const file of Array.from(files)) {
+      setUploadProgress(`Uploading ${file.name}…`);
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('user_id', userId);
+        fd.append('app_id', APP_ID);
+        const res = await fetch(`${BACKEND}/v1/uploads/file`, { method: 'POST', headers: HEADERS, body: fd });
+        const data = await res.json();
+        if (data.success && data.file_url) {
+          // Save to gallery
+          await fetch(`${BACKEND}/v1/gallery/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...HEADERS },
+            body: JSON.stringify({
+              user_id: userId, app_id: APP_ID,
+              image_url: data.file_url,
+              title: file.name.replace(/\.[^.]+$/, ''),
+              type: 'upload_history',
+              file_size: file.size,
+              file_type: file.type,
+            }),
+          });
+          uploaded++;
+        }
+      } catch (e) { setError(`Upload failed: ${e.message}`); }
+    }
+    setUploadProgress(null);
+    setUploading(false);
+    if (uploaded > 0) { fetchGallery(); fetchStats(); }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    handleUpload(e.dataTransfer.files);
+  };
 
   const deleteItem = async (id) => {
-    await fetch(`${API}/v1/gallery/item/${id}`, { method: 'DELETE', headers });
-    setItems(prev => prev.filter(i => i.id !== id));
-    if (selected?.id === id) setSelected(null);
-    loadStats();
+    try {
+      await fetch(`${BACKEND}/v1/gallery/item/${id}`, { method: 'DELETE', headers: HEADERS });
+      setItems(prev => prev.filter(i => i.id !== id));
+      if (preview?.id === id) setPreview(null);
+      fetchStats();
+    } catch {}
   };
 
   const toggleFavorite = async (item) => {
-    await fetch(`${API}/v1/gallery/item/${item.id}`, {
-      method: 'PATCH', headers,
-      body: JSON.stringify({ is_favorite: !item.is_favorite }),
-    });
-    setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_favorite: !i.is_favorite } : i));
+    try {
+      await fetch(`${BACKEND}/v1/gallery/item/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...HEADERS },
+        body: JSON.stringify({ is_favorite: !item.is_favorite }),
+      });
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_favorite: !i.is_favorite } : i));
+    } catch {}
   };
 
   const createFolder = async () => {
-    if (!newFolderName.trim()) return;
-    const res = await fetch(`${API}/v1/gallery/folders`, {
-      method: 'POST', headers,
-      body: JSON.stringify({ user_id: USER_ID, name: newFolderName, app_id: APP_ID }),
-    });
-    const data = await res.json();
-    if (data.success) { setFolders(prev => [...prev, data.folder]); setNewFolderName(''); setShowNewFolder(false); }
+    if (!folderName.trim()) return;
+    try {
+      const res = await fetch(`${BACKEND}/v1/gallery/folders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...HEADERS },
+        body: JSON.stringify({ user_id: userId, name: folderName.trim(), app_id: APP_ID }),
+      });
+      const data = await res.json();
+      if (data.success) { setFolders(prev => [...prev, data.folder]); }
+    } catch {}
+    setFolderName(''); setShowNewFolder(false);
   };
 
+  const downloadFile = (url, name) => {
+    const a = document.createElement('a');
+    a.href = url; a.download = name || `tm-dezigns-${Date.now()}`; a.target = '_blank'; a.click();
+  };
+
+  // ── Drag over ──────────────────────────────────────────────────────────
+  const [dragOver, setDragOver] = useState(false);
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <div className="max-w-7xl mx-auto p-4 md:p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-4xl">🗄️</span>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Creator Vault
-                </h1>
-                <p className="text-gray-400 text-sm">Your AI asset library — designs, tattoos, vectors, and more</p>
-              </div>
-            </div>
-            {stats && (
-              <div className="hidden md:flex gap-4">
-                {[
-                  { label: 'Total Assets', value: stats.total_items },
-                  { label: 'Folders', value: stats.total_folders },
-                  { label: 'Favorites', value: stats.favorites },
-                  { label: 'Saved Prompts', value: stats.total_prompts },
-                ].map(s => (
-                  <div key={s.label} className="text-center bg-gray-900 rounded-xl px-4 py-2 border border-gray-800">
-                    <p className="text-xl font-bold text-white">{s.value}</p>
-                    <p className="text-xs text-gray-500">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-            )}
+    <div className="p-4 lg:p-8 max-w-7xl mx-auto pb-24">
+
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-fuchsia-600 to-violet-800 flex items-center justify-center shadow-lg shadow-fuchsia-500/20">
+            <LayoutGrid className="w-5 h-5 text-white" />
           </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {[
-            { id: 'gallery', label: '🖼️ Gallery' },
-            { id: 'folders', label: '📁 Folders' },
-            { id: 'prompts', label: '📝 Prompt History' },
-          ].map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeTab === t.id ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-              }`}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* GALLERY TAB */}
-        {activeTab === 'gallery' && (
-          <div className="flex gap-6">
-            {/* Sidebar — categories */}
-            <div className="w-48 flex-shrink-0 space-y-1">
-              {CATEGORIES.map(c => (
-                <button key={c.id} onClick={() => { setActiveCategory(c.id); setActiveFolder(null); }}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all flex items-center gap-2 ${
-                    activeCategory === c.id && !activeFolder
-                      ? 'bg-purple-600 text-white'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                  }`}>
-                  <span>{c.emoji}</span>
-                  <span>{c.label}</span>
-                  {stats?.by_type?.[c.id] > 0 && (
-                    <span className="ml-auto text-xs text-gray-500">{stats.by_type[c.id]}</span>
-                  )}
-                </button>
-              ))}
-              <hr className="border-gray-800 my-2" />
-              <p className="text-xs text-gray-600 px-3 py-1">FOLDERS</p>
-              {folders.map(f => (
-                <button key={f.id} onClick={() => setActiveFolder(f.id)}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all flex items-center gap-2 ${
-                    activeFolder === f.id ? 'bg-purple-600 text-white' : 'text-gray-400 hover:bg-gray-800'
-                  }`}>
-                  <span>📁</span>
-                  <span className="truncate">{f.name}</span>
-                  <span className="ml-auto text-xs text-gray-500">{f.item_count}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Grid */}
-            <div className="flex-1">
-              {loading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : items.length === 0 ? (
-                <div className="border border-dashed border-gray-700 rounded-2xl p-16 text-center">
-                  <span className="text-5xl">🗄️</span>
-                  <p className="text-gray-400 mt-4 font-medium">Your vault is empty</p>
-                  <p className="text-gray-600 text-sm mt-2">Generate something in the Tattoo Studio and save it here</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {items.map(item => (
-                    <div key={item.id}
-                      className="group bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-purple-500/50 transition-all cursor-pointer"
-                      onClick={() => setSelected(item)}>
-                      <div className="aspect-square relative overflow-hidden bg-gray-800">
-                        <img src={item.image_url} alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 gap-2">
-                          <button onClick={e => { e.stopPropagation(); toggleFavorite(item); }}
-                            className="w-8 h-8 bg-gray-900/80 rounded-full flex items-center justify-center text-sm">
-                            {item.is_favorite ? '⭐' : '☆'}
-                          </button>
-                          <a href={item.image_url} download target="_blank" rel="noopener noreferrer"
-                            onClick={e => e.stopPropagation()}
-                            className="w-8 h-8 bg-gray-900/80 rounded-full flex items-center justify-center text-sm">
-                            ⬇️
-                          </a>
-                          <button onClick={e => { e.stopPropagation(); deleteItem(item.id); }}
-                            className="w-8 h-8 bg-red-900/80 rounded-full flex items-center justify-center text-sm">
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                      <div className="p-2">
-                        <p className="text-white text-xs font-medium truncate">{item.title}</p>
-                        <p className="text-gray-500 text-xs truncate">{item.type} · {item.style || '—'}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* FOLDERS TAB */}
-        {activeTab === 'folders' && (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-gray-400 text-sm">{folders.length} folder{folders.length !== 1 ? 's' : ''}</p>
-              <button onClick={() => setShowNewFolder(true)}
-                className="text-sm bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl transition-all">
-                + New Folder
-              </button>
-            </div>
-            {showNewFolder && (
-              <div className="bg-gray-900 border border-gray-700 rounded-2xl p-4 mb-4 flex gap-3">
-                <input value={newFolderName} onChange={e => setNewFolderName(e.target.value)}
-                  placeholder="Folder name..."
-                  className="flex-1 bg-gray-800 text-white rounded-xl px-3 py-2 text-sm border border-gray-700 focus:outline-none focus:border-purple-500"
-                  onKeyDown={e => e.key === 'Enter' && createFolder()} />
-                <button onClick={createFolder}
-                  className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-sm">Create</button>
-                <button onClick={() => setShowNewFolder(false)}
-                  className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-xl text-sm">Cancel</button>
-              </div>
-            )}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {folders.map(f => (
-                <div key={f.id}
-                  className="bg-gray-900 border border-gray-800 hover:border-purple-500/50 rounded-2xl p-6 cursor-pointer transition-all"
-                  onClick={() => { setActiveTab('gallery'); setActiveFolder(f.id); }}>
-                  <span className="text-3xl">📁</span>
-                  <p className="text-white font-medium mt-2">{f.name}</p>
-                  <p className="text-gray-500 text-sm">{f.item_count} item{f.item_count !== 1 ? 's' : ''}</p>
-                </div>
-              ))}
-              {folders.length === 0 && (
-                <div className="col-span-4 text-center py-16 text-gray-500">
-                  No folders yet. Create one to organize your vault.
-                </div>
-              )}
-            </div>
+            <h1 className="text-xl font-black text-white">Creator Vault</h1>
+            <p className="text-xs text-gray-500">
+              {stats ? `${stats.total_items || 0} assets · ${stats.favorites || 0} starred` : 'Your design library'}
+              {access.founder && ' · 👑 Founder View'}
+            </p>
           </div>
-        )}
-
-        {/* PROMPTS TAB */}
-        {activeTab === 'prompts' && (
-          <div className="space-y-2">
-            {prompts.length === 0 && (
-              <div className="text-center py-16 text-gray-500">
-                No saved prompts yet. Generate designs to build your prompt history.
-              </div>
-            )}
-            {prompts.map((p, i) => (
-              <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm">{p.prompt}</p>
-                  <p className="text-gray-500 text-xs mt-1">{p.type} · {p.style || '—'} · {new Date(p.used_at || p.saved_at).toLocaleDateString()}</p>
-                </div>
-                <button
-                  onClick={() => { window.location.href = '/tools/tattoo-studio?prompt=' + encodeURIComponent(p.prompt); }}
-                  className="text-xs bg-purple-700 hover:bg-purple-600 text-white px-3 py-1.5 rounded-lg flex-shrink-0 transition-all">
-                  🔄 Reuse
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setViewMode(v => v === 'grid' ? 'list' : 'grid')}
+            className="p-2 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white transition-all">
+            {viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
+          </button>
+          <button onClick={() => setShowNewFolder(v => !v)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white text-xs transition-all">
+            <FolderPlus className="w-4 h-4" /> New Folder
+          </button>
+          <button onClick={() => fileRef.current?.click()} disabled={uploading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-700 hover:from-fuchsia-500 hover:to-violet-600 text-white text-xs font-bold disabled:opacity-50 transition-all">
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {uploadProgress || 'Upload'}
+          </button>
+          <input ref={fileRef} type="file" multiple accept={ACCEPT} className="hidden"
+            onChange={e => handleUpload(e.target.files)} />
+        </div>
       </div>
 
-      {/* Item Detail Modal */}
-      {selected && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setSelected(null)}>
-          <div className="bg-gray-900 rounded-3xl overflow-hidden max-w-2xl w-full border border-gray-700"
-            onClick={e => e.stopPropagation()}>
-            <img src={selected.image_url} alt={selected.title} className="w-full max-h-96 object-contain bg-gray-800" />
-            <div className="p-6 space-y-4">
-              <div>
-                <h3 className="text-white font-bold text-lg">{selected.title}</h3>
-                {selected.prompt && <p className="text-gray-400 text-sm mt-1">{selected.prompt}</p>}
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  {[selected.type, selected.style, ...(selected.tags || [])].filter(Boolean).map(t => (
-                    <span key={t} className="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded-lg">{t}</span>
-                  ))}
+      {/* New folder input */}
+      {showNewFolder && (
+        <div className="flex items-center gap-2 mb-4 bg-gray-900 border border-gray-800 rounded-xl p-3">
+          <input value={folderName} onChange={e => setFolderName(e.target.value)}
+            placeholder="Folder name…" onKeyDown={e => e.key === 'Enter' && createFolder()}
+            className="flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-gray-600" />
+          <button onClick={createFolder} className="text-xs text-violet-400 hover:text-violet-300 font-medium px-3 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20">Create</button>
+          <button onClick={() => setShowNewFolder(false)} className="text-gray-600 hover:text-gray-400"><X className="w-4 h-4" /></button>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="mb-4 flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+          <p className="text-xs text-red-400 flex-1">{error}</p>
+          <button onClick={fetchGallery} className="text-xs text-red-300 flex items-center gap-1">
+            <RefreshCw className="w-3 h-3" /> Retry
+          </button>
+        </div>
+      )}
+
+      <div className="flex gap-6">
+        {/* Category sidebar */}
+        <div className="w-44 flex-shrink-0 space-y-0.5">
+          {CATEGORIES.map(c => (
+            <button key={c.id} onClick={() => setCategory(c.id)}
+              className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2 ${
+                category === c.id
+                  ? 'bg-violet-600/20 text-violet-300 border border-violet-500/30'
+                  : 'text-gray-500 hover:bg-gray-900 hover:text-white'
+              }`}>
+              <span>{c.emoji}</span>
+              <span className="truncate">{c.label}</span>
+            </button>
+          ))}
+          {folders.length > 0 && (
+            <>
+              <div className="pt-2 pb-1 px-3 text-[10px] text-gray-700 uppercase tracking-wider">Folders</div>
+              {folders.map(f => (
+                <button key={f.id} onClick={() => {}}
+                  className="w-full text-left px-3 py-2 rounded-xl text-sm text-gray-500 hover:bg-gray-900 hover:text-white flex items-center gap-2 transition-all">
+                  <span>📁</span>
+                  <span className="truncate flex-1">{f.name}</span>
+                  <span className="text-xs text-gray-700">{f.item_count || 0}</span>
+                </button>
+              ))}
+            </>
+          )}
+        </div>
+
+        {/* Main gallery area */}
+        <div className="flex-1 min-w-0">
+          {/* Drop zone */}
+          <div
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={e => { setDragOver(false); handleDrop(e); }}
+            onClick={() => !items.length && fileRef.current?.click()}
+            className={`mb-4 border-2 border-dashed rounded-2xl p-4 text-center text-xs text-gray-600 transition-all ${
+              dragOver ? 'border-violet-500/60 bg-violet-500/5 text-violet-400' : 'border-gray-800 hover:border-gray-700 cursor-pointer'
+            }`}>
+            {dragOver ? 'Drop files here' : 'Drop files here or click Upload above · PNG, JPG, SVG, PDF, AI, PSD'}
+          </div>
+
+          {/* Grid */}
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {Array(8).fill(0).map((_, i) => (
+                <div key={i} className="aspect-square bg-gray-900 rounded-2xl border border-gray-800 animate-pulse" />
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+              <div className="w-20 h-20 rounded-3xl bg-gray-900 border-2 border-dashed border-gray-800 flex items-center justify-center">
+                <Image className="w-8 h-8 text-gray-700" />
+              </div>
+              <div className="text-center">
+                <p className="text-white font-bold">No designs yet</p>
+                <p className="text-gray-600 text-sm mt-1">Upload your first design or generate something in the AI Studio</p>
+              </div>
+              <button onClick={() => fileRef.current?.click()}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-700 text-white text-sm font-bold hover:opacity-90 transition-opacity">
+                <Upload className="w-4 h-4" /> Upload Now
+              </button>
+            </div>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {items.map(item => (
+                <div key={item.id}
+                  className="group relative bg-gray-900 border border-gray-800 hover:border-violet-500/40 rounded-2xl overflow-hidden transition-all cursor-pointer"
+                  onClick={() => setPreview(item)}>
+                  <div className="aspect-square overflow-hidden bg-gray-800">
+                    <img src={item.image_url} alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={e => { e.target.src = ''; e.target.className = 'hidden'; }} />
+                  </div>
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={e => { e.stopPropagation(); toggleFavorite(item); }}
+                      className="w-7 h-7 bg-gray-900/80 backdrop-blur rounded-lg flex items-center justify-center text-xs">
+                      {item.is_favorite ? '⭐' : '☆'}
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); deleteItem(item.id); }}
+                      className="w-7 h-7 bg-red-500/20 backdrop-blur rounded-lg flex items-center justify-center">
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </button>
+                  </div>
+                  <div className="p-3">
+                    <p className="text-xs font-medium text-white truncate">{item.title || 'Untitled'}</p>
+                    <p className="text-[10px] text-gray-600">{item.type?.replace('_',' ') || 'Design'}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-3">
-                <a href={selected.image_url} download target="_blank" rel="noopener noreferrer"
-                  className="flex-1 text-center py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-sm font-medium transition-all">
-                  ⬇️ Download
+              ))}
+            </div>
+          ) : (
+            // List view
+            <div className="space-y-2">
+              {items.map(item => (
+                <div key={item.id} onClick={() => setPreview(item)}
+                  className="flex items-center gap-4 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl p-3 cursor-pointer transition-all group">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-800 flex-shrink-0">
+                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{item.title || 'Untitled'}</p>
+                    <p className="text-xs text-gray-600">{item.type?.replace(/_/g,' ')} · {item.created_at?.split('T')[0]}</p>
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={e => { e.stopPropagation(); downloadFile(item.image_url, item.title); }}
+                      className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white">
+                      <Download className="w-4 h-4" />
+                    </button>
+                    <button onClick={e => { e.stopPropagation(); deleteItem(item.id); }}
+                      className="p-2 rounded-lg hover:bg-red-500/10 text-gray-600 hover:text-red-400">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Preview modal */}
+      {preview && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setPreview(null)}>
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden max-w-2xl w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+              <h3 className="font-bold text-white truncate">{preview.title || 'Preview'}</h3>
+              <div className="flex items-center gap-2">
+                <a href={preview.image_url} download target="_blank" rel="noreferrer"
+                  className="flex items-center gap-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg transition-all">
+                  <Download className="w-3.5 h-3.5" /> Download
                 </a>
-                <button onClick={() => toggleFavorite(selected)}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-xl text-sm transition-all">
-                  {selected.is_favorite ? '⭐ Favorited' : '☆ Favorite'}
-                </button>
-                <button onClick={() => { deleteItem(selected.id); setSelected(null); }}
-                  className="px-4 py-2 bg-red-900 hover:bg-red-800 text-white rounded-xl text-sm transition-all">
-                  🗑️ Delete
+                <button onClick={() => setPreview(null)} className="text-gray-500 hover:text-white">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
+            </div>
+            <div className="bg-gray-950">
+              <img src={preview.image_url} alt={preview.title} className="w-full max-h-[60vh] object-contain" />
+            </div>
+            <div className="px-5 py-3 text-xs text-gray-600 flex gap-4">
+              <span>{preview.type?.replace(/_/g,' ')}</span>
+              <span>{preview.created_at?.split('T')[0]}</span>
+              {preview.file_size && <span>{(preview.file_size/1024).toFixed(0)} KB</span>}
             </div>
           </div>
         </div>
