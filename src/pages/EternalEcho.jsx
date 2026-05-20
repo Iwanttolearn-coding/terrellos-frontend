@@ -1,6 +1,6 @@
 /**
  * EternalEcho.jsx — Main page
- * Entry point for the Heavenly Eternal Echo memory preservation experience.
+ * Entry point for the TerrellOS memory preservation experience.
  * Routes: ConsentGate → MemoryCaptureSession → Completion
  */
 import { useState } from 'react';
