@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { pingBackend } from '@/lib/api';
+import { pingBackend } from '@/lib/backendApi';
 import { API_BASE_URL } from '@/lib/env';
 import { Settings2, Zap, CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import ModelBadge from '@/components/ModelBadge';
