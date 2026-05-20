@@ -1,116 +1,97 @@
 /**
- * FounderLogin.jsx — Quick founder access
- * Enter your founder email → instant full access, no password needed.
+ * FounderLogin.jsx — TM Dezigns AI Designer
+ * Simple founder email login. No loops. No external auth.
+ * On success → redirects to dashboard with full access.
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-
-const FOUNDER_EMAILS = ['millzterrell210@icloud.com', 'millzterrell5@gmail.com'];
+import { isFounder } from '@/lib/resolveUserAccess';
+import { Crown, Mail, ArrowRight, Loader2, Lock } from 'lucide-react';
 
 export default function FounderLogin() {
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const { loginAsFounder } = useAuth();
+  const { loginAsFounder, user } = useAuth();
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  // Already logged in — go home
+  if (user?.email) {
+    navigate('/', { replace: true });
+    return null;
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    setLoading(true);
     setError('');
-
-    const normalized = email.toLowerCase().trim();
-    
-    // Try backend bypass first for a real token
-    try {
-      const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
-      const res = await fetch(`${BACKEND}/v1/auth/founder-bypass`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-App-ID': 'terrellos' },
-        body: JSON.stringify({ email: normalized }),
-        signal: AbortSignal.timeout(8000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.token) {
-          localStorage.setItem('terrellos_token', data.token);
-          localStorage.setItem('terrellos_user', JSON.stringify(data.user));
-        }
-      }
-    } catch (e) {
-      console.warn('[FounderLogin] Backend bypass failed, using local auth', e);
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) { setError('Enter your founder email'); return; }
+    if (!isFounder(trimmed)) {
+      setError('Access denied. This login is for authorized founders only.');
+      return;
     }
-
-    // Local founder login always works regardless of backend
-    const success = loginAsFounder(normalized);
+    setLoading(true);
+    const success = loginAsFounder(trimmed);
     if (success) {
       navigate('/', { replace: true });
     } else {
-      setError('This email does not have founder access.');
+      setError('Login failed. Contact system admin.');
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl gradient-purple-blue flex items-center justify-center mx-auto mb-4 glow-purple">
-            <span className="text-2xl">⚡</span>
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
+      <div className="w-full max-w-sm space-y-6">
+
+        {/* Logo */}
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-700 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
+            <Crown className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">TerrellOS</h1>
-          <p className="text-gray-400 text-sm mt-1">Founder Access</p>
+          <div>
+            <h1 className="text-2xl font-black text-white">TM Dezigns</h1>
+            <p className="text-sm text-gray-400">AI Designer · Founder Access</p>
+          </div>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
           <div>
-            <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">
-              Founder Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="millzterrell5@gmail.com"
-              autoComplete="email"
-              className="w-full bg-gray-900 border border-gray-700 focus:border-purple-500 text-white rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors"
-            />
+            <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">Founder Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                disabled={loading}
+                className="w-full bg-gray-800 border border-gray-700 focus:border-amber-500/50 text-white placeholder-gray-600 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-colors disabled:opacity-50"
+              />
+            </div>
           </div>
 
           {error && (
-            <p className="text-red-400 text-xs text-center">{error}</p>
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2.5">
+              <Lock className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+              <p className="text-xs text-red-400">{error}</p>
+            </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading || !email.trim()}
-            className="w-full py-3 rounded-xl font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed
-              bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-lg shadow-purple-500/20"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Verifying...
-              </span>
-            ) : 'Access TerrellOS'}
+          <button type="submit" disabled={loading || !email.trim()}
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 disabled:opacity-40 text-white py-3 rounded-xl font-bold transition-all active:scale-95">
+            {loading
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying…</>
+              : <><ArrowRight className="w-4 h-4" /> Enter as Founder</>
+            }
           </button>
-
-          <div className="mt-4 text-center">
-            <button type="button" onClick={() => navigate('/')}
-              className="text-gray-600 hover:text-gray-400 text-xs transition-colors">
-              Continue as guest →
-            </button>
-          </div>
         </form>
 
-        <div className="mt-8 p-4 bg-gray-900/50 rounded-xl border border-gray-800">
-          <p className="text-gray-600 text-xs text-center">
-            Founder-only access · No password required<br/>
-            TM Dezigns ecosystem · v9.1.0
-          </p>
-        </div>
+        <p className="text-center text-xs text-gray-700">
+          Powered by TerrellOS AI Engine · TM Dezigns
+        </p>
       </div>
     </div>
   );
