@@ -18,3 +18,14 @@ export function resolveUserAccess(user) {
   return { ...user, role: user.role||'member', plan: user.plan||'free',
     isFounder:false, allToolsUnlocked:false, displayPlan: user.plan||'Free' }
 }
+export function getFounderAccess(user) {
+  if (!user) return null;
+  if (!isFounderEmail(user.email)) return null;
+  return {
+    isFounder: true,
+    role: 'super_admin',
+    plan: 'founder',
+    allToolsUnlocked: true,
+    displayPlan: 'Founder ✦',
+  };
+}
