@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/env';
-import { pingBackend } from '@/lib/api';
+import { pingBackend } from '@/lib/backendApi';
 import { ScrollText, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
