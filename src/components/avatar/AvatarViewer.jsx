@@ -1,5 +1,5 @@
 /**
- * AvatarViewer.jsx — TerrellOS / Heavenly Eternal Echo
+ * AvatarViewer.jsx — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
  * Compact embeddable cinematic avatar widget.
  * Use this in profile cards, dashboards, memorial pages.
