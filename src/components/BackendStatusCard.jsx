@@ -1,5 +1,5 @@
 /**
- * BackendStatusCard.jsx — TerrellOS / Heavenly Eternal Echo
+ * BackendStatusCard.jsx — TerrellOS / TerrellOS
  * Full backend connection card for Founder / Admin / Dashboard pages.
  * Shows: URL, status badge, version, latency, docs/health links, recheck.
  */
@@ -7,7 +7,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { checkBackendHealth } from '@/lib/api';
 import { Wifi, WifiOff, Loader2, RefreshCw, ExternalLink, Activity } from 'lucide-react';
 
-const BACKEND_URL = 'https://terrellos-backend.onrender.com';
+const BACKEND_URL = 'https://terrellos-backend.fly.dev';
 
 export default function BackendStatusCard() {
   const [status,      setStatus]    = useState('checking'); // 'checking' | 'online' | 'offline'
