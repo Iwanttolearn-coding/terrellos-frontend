@@ -1,304 +1,239 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+/**
+ * AIToolsStudio.jsx — TM Dezigns AI Designer
+ * Real AI image generation via terrellos-backend.fly.dev
+ * No fake results. No demo mode. Loading/error/retry states.
+ */
+import { useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { ToolCard } from '@/api/entities';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
+import { Image, Loader2, Download, RefreshCw, Lock, Sparkles, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const CATEGORIES = ['All', 'AI', 'Tattoo', 'Print', 'Vector', 'Design', 'Gallery', 'Upload'];
+const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
+const APP_ID  = import.meta.env.VITE_APP_ID || 'terrellos';
 
-const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
-  id: i,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  size: 2 + Math.random() * 3,
-  duration: 8 + Math.random() * 12,
-  delay: Math.random() * 8,
-  color: ['#ff4680', '#5078ff', '#00ffc8', '#a855f7', '#f59e0b'][Math.floor(Math.random() * 5)],
-}));
+const STYLE_PRESETS = [
+  { label: 'Realistic',    val: 'photorealistic, ultra-detailed, professional photography' },
+  { label: 'Tattoo Art',   val: 'black and grey tattoo art, fine line, professional tattoo design' },
+  { label: 'Watercolor',   val: 'watercolor illustration, soft edges, artistic, painterly' },
+  { label: 'Minimalist',   val: 'minimalist, clean lines, simple, modern design' },
+  { label: 'Vintage',      val: 'vintage retro style, aged, classic Americana, old school' },
+  { label: 'Digital Art',  val: 'digital concept art, vibrant, detailed, trending on artstation' },
+  { label: 'DTF Print',    val: 'DTF print-ready design, vector style, 8 colors max, transparent background' },
+  { label: 'Custom',       val: '' },
+];
+
+const SIZE_OPTIONS = [
+  { label: 'Square 1:1',      val: '1024x1024' },
+  { label: 'Portrait 2:3',    val: '1024x1536' },
+  { label: 'Landscape 3:2',   val: '1536x1024' },
+];
 
 export default function AIToolsStudio() {
-  const [tools, setTools] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [liveBg, setLiveBg] = useState(true);
-  const [search, setSearch] = useState('');
-  const { access } = useAuth();
+  const { user } = useAuth();
+  const access = resolveUserAccess(user);
 
-  useEffect(() => {
-    ToolCard.list().then(data => {
-      const sorted = [...data].sort((a, b) => (a.sort_order || 99) - (b.sort_order || 99));
-      setTools(sorted.filter(t => t.enabled !== false));
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+  const [prompt, setPrompt]     = useState('');
+  const [style, setStyle]       = useState(STYLE_PRESETS[0]);
+  const [size, setSize]         = useState(SIZE_OPTIONS[0].val);
+  const [loading, setLoading]   = useState(false);
+  const [result, setResult]     = useState(null);
+  const [error, setError]       = useState('');
+  const [history, setHistory]   = useState([]);
 
-  const filtered = tools.filter(t => {
-    const matchCat = activeCategory === 'All' || t.category === activeCategory;
-    const matchSearch = !search || t.title?.toLowerCase().includes(search.toLowerCase()) || t.description?.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  // Gate for non-subscribers
+  if (!access.toolsEnabled) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-8">
+        <div className="text-center max-w-md space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto">
+            <Lock className="w-7 h-7 text-violet-400" />
+          </div>
+          <h2 className="text-2xl font-black text-white">AI Studio Access Required</h2>
+          <p className="text-gray-400 text-sm">Upgrade to unlock AI image generation, tattoo patterns, and all creative tools.</p>
+          <Link to="/pricing" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white font-bold hover:opacity-90 transition-opacity">
+            <Zap className="w-4 h-4" /> Upgrade Now
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  const featured = filtered.filter(t => t.featured);
-  const regular = filtered.filter(t => !t.featured);
+  const generate = async () => {
+    const fullPrompt = style.val
+      ? `${prompt.trim()}, ${style.val}`
+      : prompt.trim();
+    if (!fullPrompt) return;
+    setLoading(true); setError(''); setResult(null);
+    try {
+      const res = await fetch(`${BACKEND}/v1/design/generate-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-App-ID': APP_ID },
+        body: JSON.stringify({ prompt: fullPrompt, size, quality: 'standard', app_id: APP_ID }),
+        signal: AbortSignal.timeout(60000),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.error || `Error ${res.status}`);
+      const url = data.image_url || data.images?.[0]?.url;
+      if (!url) throw new Error('No image returned from API');
+      const entry = { url, prompt: fullPrompt, style: style.label, timestamp: new Date().toLocaleTimeString() };
+      setResult(entry);
+      setHistory(prev => [entry, ...prev].slice(0, 20));
+    } catch (e) {
+      setError(e.name === 'AbortError' ? 'Generation timed out — try again' : e.message);
+    }
+    setLoading(false);
+  };
+
+  const download = (url, filename = 'tm-dezigns-ai') => {
+    const a = document.createElement('a');
+    a.href = url; a.download = `${filename}-${Date.now()}.png`;
+    a.target = '_blank'; a.click();
+  };
 
   return (
-    <div className={`ai-help-page min-h-screen relative overflow-hidden ${liveBg ? 'live-bg' : 'bg-gray-950'}`}>
-      {/* ── Animated background layers ── */}
-      {liveBg && (
-        <>
-          <div className="bg-glow-blob blob-1" />
-          <div className="bg-glow-blob blob-2" />
-          <div className="bg-glow-blob blob-3" />
-          <div className="bg-grid" />
-          <div className="bg-float-glow" />
-          {/* Floating particles */}
-          <div className="particles-layer">
-            {PARTICLES.map(p => (
-              <div key={p.id} className="particle"
-                style={{
-                  left: `${p.x}%`, top: `${p.y}%`,
-                  width: p.size, height: p.size,
-                  background: p.color,
-                  animationDuration: `${p.duration}s`,
-                  animationDelay: `${p.delay}s`,
-                  boxShadow: `0 0 ${p.size * 3}px ${p.color}`,
-                }}
-              />
-            ))}
-          </div>
-          {/* DTF silhouettes */}
-          <div className="silhouettes-layer" aria-hidden="true">
-            {['🌀','⬡','◈','✦','⟐','❋','◉'].map((s, i) => (
-              <span key={i} className="silhouette"
-                style={{ left: `${8 + i * 13}%`, top: `${15 + (i % 3) * 25}%`,
-                  animationDelay: `${i * 1.2}s`, fontSize: `${24 + (i % 3) * 12}px` }}>
-                {s}
-              </span>
-            ))}
-          </div>
-        </>
-      )}
+    <div className="p-4 lg:p-8 max-w-6xl mx-auto space-y-8 pb-24">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-800 flex items-center justify-center shadow-lg shadow-purple-500/20">
+          <Sparkles className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h1 className="text-xl font-black text-white">AI Image Studio</h1>
+          <p className="text-xs text-gray-500">TM Dezigns · Powered by DALL-E 3</p>
+        </div>
+        {access.founder && (
+          <span className="ml-auto text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-full font-medium">👑 Founder</span>
+        )}
+      </div>
 
-      {/* ── Content ── */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-10 md:py-16">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-purple-300 mb-4 backdrop-blur-sm">
-            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-            AI Tools Studio · All Around Customs
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Controls */}
+        <div className="space-y-5">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+            {/* Prompt */}
+            <div>
+              <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">Describe your design</label>
+              <textarea
+                value={prompt} onChange={e => setPrompt(e.target.value)}
+                placeholder="e.g. A fierce lion with crown, smoke effect, dark background…"
+                rows={4} disabled={loading}
+                className="w-full bg-gray-800 border border-gray-700 focus:border-violet-500/50 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors resize-none disabled:opacity-50"
+              />
+            </div>
+
+            {/* Style presets */}
+            <div>
+              <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">Style</label>
+              <div className="flex flex-wrap gap-2">
+                {STYLE_PRESETS.map(s => (
+                  <button key={s.label} onClick={() => setStyle(s)} disabled={loading}
+                    className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${style.label === s.label ? 'bg-violet-600/30 border-violet-500/50 text-violet-200' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'}`}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              {style.label === 'Custom' && (
+                <input value={style.val} onChange={e => setStyle({ label: 'Custom', val: e.target.value })}
+                  placeholder="Describe custom style…" disabled={loading}
+                  className="mt-2 w-full bg-gray-800 border border-gray-700 focus:border-violet-500/50 text-white placeholder-gray-600 rounded-xl px-3 py-2 text-xs focus:outline-none transition-colors" />
+              )}
+            </div>
+
+            {/* Size */}
+            <div>
+              <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">Size</label>
+              <div className="flex gap-2">
+                {SIZE_OPTIONS.map(s => (
+                  <button key={s.val} onClick={() => setSize(s.val)} disabled={loading}
+                    className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${size === s.val ? 'bg-violet-600/30 border-violet-500/50 text-violet-200' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'}`}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                <p className="text-xs text-red-400">{error}</p>
+                <button onClick={generate} className="text-xs text-red-300 hover:text-white transition-colors flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3" /> Retry
+                </button>
+              </div>
+            )}
+
+            <button onClick={generate} disabled={loading || !prompt.trim()}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 disabled:opacity-40 text-white py-3.5 rounded-xl font-bold transition-all active:scale-95">
+              {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4" /> Generate Image</>}
+            </button>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-3 leading-tight">
-            Your Creative<br />
-            <span className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              AI Toolkit
-            </span>
-          </h1>
-          <p className="text-gray-400 text-sm max-w-xl mx-auto">
-            Powered by TerrellOS · Generate, vectorize, print, and create without limits
-          </p>
-          {/* Admin links */}
-          {access?.founder && (
-            <div className="flex items-center justify-center gap-3 mt-4">
-              <Link to="/tools/manage-ai-tools"
-                className="text-xs bg-purple-700/60 hover:bg-purple-600/80 text-purple-200 px-4 py-1.5 rounded-full border border-purple-500/30 backdrop-blur-sm transition-all">
-                ⚙️ Manage Tools
-              </Link>
-              <button onClick={() => setLiveBg(v => !v)}
-                className={`text-xs px-4 py-1.5 rounded-full border backdrop-blur-sm transition-all ${
-                  liveBg ? 'bg-cyan-700/60 border-cyan-500/30 text-cyan-200' : 'bg-gray-700/60 border-gray-500/30 text-gray-400'
-                }`}>
-                {liveBg ? '✨ Live BG: ON' : '◻ Live BG: OFF'}
-              </button>
+        </div>
+
+        {/* Result */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+          {loading ? (
+            <div className="h-80 flex flex-col items-center justify-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-violet-400 animate-pulse" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-white">Generating your design…</p>
+                <p className="text-xs text-gray-500 mt-1">DALL-E 3 · ~20 seconds</p>
+              </div>
+              <div className="w-48 h-1 bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-violet-600 to-purple-600 rounded-full animate-pulse w-3/4" />
+              </div>
+            </div>
+          ) : result ? (
+            <div>
+              <img src={result.url} alt={result.prompt} className="w-full object-cover" />
+              <div className="p-4 space-y-3">
+                <p className="text-xs text-gray-400 line-clamp-2">{result.prompt}</p>
+                <div className="flex gap-2">
+                  <button onClick={() => download(result.url, 'tm-dezigns')}
+                    className="flex-1 flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 text-white py-2 rounded-xl text-xs font-medium transition-all">
+                    <Download className="w-3.5 h-3.5" /> Download
+                  </button>
+                  <button onClick={generate}
+                    className="flex-1 flex items-center justify-center gap-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-300 py-2 rounded-xl text-xs font-medium transition-all">
+                    <RefreshCw className="w-3.5 h-3.5" /> Regenerate
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="h-80 flex flex-col items-center justify-center gap-3 text-center px-6">
+              <Image className="w-12 h-12 text-gray-700" />
+              <p className="text-sm text-gray-500">Your generated image will appear here</p>
+              <p className="text-xs text-gray-700">Describe your design above and hit Generate</p>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Search + Category filter */}
-        <div className="flex flex-col md:flex-row gap-3 mb-8 items-center justify-between">
-          <div className="relative w-full md:w-72">
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search tools..."
-              className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl px-4 py-2.5 text-sm backdrop-blur-sm focus:outline-none focus:border-purple-500/60 transition-colors"
-            />
-          </div>
-          <div className="flex gap-2 flex-wrap justify-center">
-            {CATEGORIES.map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  activeCategory === cat
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25'
-                    : 'bg-white/5 border border-white/10 text-gray-400 hover:border-white/20 hover:text-white backdrop-blur-sm'
-                }`}>
-                {cat}
-              </button>
+      {/* History */}
+      {history.length > 0 && (
+        <div>
+          <h2 className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-4">This Session ({history.length})</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {history.map((item, i) => (
+              <div key={i} className="group relative bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
+                <img src={item.url} alt={item.prompt} className="w-full aspect-square object-cover" />
+                <div className="absolute inset-0 bg-gray-900/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
+                  <p className="text-xs text-white text-center line-clamp-2">{item.prompt.slice(0,60)}</p>
+                  <button onClick={() => download(item.url, `tm-dezigns-${i}`)}
+                    className="flex items-center gap-1 text-xs bg-white/10 hover:bg-white/20 text-white px-2 py-1 rounded-lg transition-all">
+                    <Download className="w-3 h-3" /> Save
+                  </button>
+                </div>
+                <div className="p-2">
+                  <p className="text-xs text-gray-600">{item.timestamp}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
-
-        {loading && (
-          <div className="flex items-center justify-center h-48">
-            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-
-        {!loading && (
-          <>
-            {/* Featured cards — larger */}
-            {featured.length > 0 && activeCategory === 'All' && !search && (
-              <div className="mb-8">
-                <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">⭐ Featured</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {featured.map(tool => (
-                    <ToolCardComponent key={tool.id} tool={tool} featured />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* All / filtered cards */}
-            {(regular.length > 0 || search || activeCategory !== 'All') && (
-              <div>
-                {featured.length > 0 && activeCategory === 'All' && !search && (
-                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">All Tools</p>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {(search || activeCategory !== 'All' ? filtered : regular).map(tool => (
-                    <ToolCardComponent key={tool.id} tool={tool} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {filtered.length === 0 && (
-              <div className="text-center py-20">
-                <span className="text-5xl">🔍</span>
-                <p className="text-gray-400 mt-4">No tools found for "{search || activeCategory}"</p>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Embedded CSS */}
-      <style>{`
-        .ai-help-page.live-bg {
-          background: radial-gradient(circle at 20% 20%, rgba(255,70,120,0.22) 0%, transparent 35%),
-                      radial-gradient(circle at 80% 30%, rgba(80,120,255,0.20) 0%, transparent 35%),
-                      radial-gradient(circle at 50% 90%, rgba(0,255,200,0.14) 0%, transparent 35%),
-                      #050816;
-        }
-        .bg-grid {
-          position: absolute; inset: 0; pointer-events: none; z-index: 0;
-          background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
-          background-size: 48px 48px;
-          animation: gridMove 18s linear infinite;
-        }
-        .bg-float-glow {
-          position: absolute; inset: -20%; pointer-events: none; z-index: 0;
-          background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 14%);
-          animation: floatGlow 12s ease-in-out infinite alternate;
-        }
-        .bg-glow-blob {
-          position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
-          filter: blur(80px); opacity: 0.45; animation: blobFloat 15s ease-in-out infinite alternate;
-        }
-        .blob-1 { width: 420px; height: 420px; background: rgba(168,85,247,0.35); top: -80px; left: -80px; animation-delay: 0s; }
-        .blob-2 { width: 380px; height: 380px; background: rgba(236,72,153,0.30); bottom: -60px; right: -60px; animation-delay: -5s; }
-        .blob-3 { width: 300px; height: 300px; background: rgba(6,182,212,0.25); top: 40%; left: 40%; animation-delay: -10s; }
-        .particles-layer { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
-        .particle {
-          position: absolute; border-radius: 50%;
-          animation: particleFloat linear infinite;
-        }
-        .silhouettes-layer { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-        .silhouette {
-          position: absolute; opacity: 0.04; color: white;
-          animation: silhouetteFloat 20s ease-in-out infinite alternate;
-        }
-        .ai-tool-card {
-          position: relative; z-index: 2;
-          background: rgba(15,23,42,0.72);
-          border: 1px solid rgba(255,255,255,0.10);
-          backdrop-filter: blur(14px);
-          border-radius: 22px;
-          transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-        }
-        .ai-tool-card:hover {
-          transform: translateY(-5px);
-          border-color: rgba(255,255,255,0.20);
-        }
-        .ai-tool-card.featured { border-color: rgba(167,139,250,0.30); }
-        .ai-tool-card.featured:hover { border-color: rgba(167,139,250,0.55); }
-        @keyframes gridMove { from { transform: translateY(0); } to { transform: translateY(48px); } }
-        @keyframes floatGlow {
-          from { transform: translate3d(-3%,-2%,0) scale(1); }
-          to   { transform: translate3d(4%,3%,0) scale(1.08); }
-        }
-        @keyframes blobFloat {
-          0%   { transform: translate(0,0) scale(1); }
-          50%  { transform: translate(30px,20px) scale(1.06); }
-          100% { transform: translate(-20px,30px) scale(0.95); }
-        }
-        @keyframes particleFloat {
-          0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0.7; }
-          50%  { transform: translateY(-60px) translateX(20px) scale(1.2); opacity: 1; }
-          100% { transform: translateY(-120px) translateX(-10px) scale(0.8); opacity: 0; }
-        }
-        @keyframes silhouetteFloat {
-          from { transform: translateY(0) rotate(0deg); }
-          to   { transform: translateY(-30px) rotate(15deg); }
-        }
-      `}</style>
-    </div>
-  );
-}
-
-function ToolCardComponent({ tool, featured = false }) {
-  const navigate = useNavigate();
-  const glowColor = tool.glow_color || 'rgba(167,139,250,0.35)';
-
-  return (
-    <div
-      className={`ai-tool-card group cursor-pointer ${featured ? 'featured' : ''}`}
-      style={{ '--glow': glowColor }}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 0 32px ${glowColor}`; }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
-      onClick={() => tool.route && navigate(tool.route)}
-    >
-      <div className={`p-5 ${featured ? 'p-6' : ''}`}>
-        {/* Icon + category */}
-        <div className="flex items-start justify-between mb-3">
-          <div className={`flex items-center justify-center rounded-xl ${featured ? 'w-14 h-14 text-3xl' : 'w-11 h-11 text-2xl'} bg-gradient-to-br ${tool.bg_color || 'from-purple-600 to-violet-800'} shadow-lg`}>
-            {tool.icon_url
-              ? <img src={tool.icon_url} alt="" className="w-full h-full object-cover rounded-xl" />
-              : <span>{tool.icon_emoji || '🛠️'}</span>
-            }
-          </div>
-          <span className="text-xs text-gray-500 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
-            {tool.category}
-          </span>
-        </div>
-
-        {/* Text */}
-        <h3 className={`font-bold text-white mb-1.5 ${featured ? 'text-lg' : 'text-sm'}`}>
-          {tool.title}
-        </h3>
-        <p className="text-gray-400 text-xs leading-relaxed mb-4 line-clamp-3">
-          {tool.description}
-        </p>
-
-        {/* Button */}
-        <button
-          className={`w-full py-2 rounded-xl text-xs font-semibold transition-all
-            bg-gradient-to-r ${tool.bg_color || 'from-purple-600 to-violet-700'}
-            text-white opacity-80 group-hover:opacity-100 group-hover:shadow-lg`}
-          style={{ boxShadow: `0 2px 12px ${glowColor}` }}
-        >
-          {tool.button_label || 'Open Tool'} →
-        </button>
-      </div>
+      )}
     </div>
   );
 }
