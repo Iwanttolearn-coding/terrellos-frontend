@@ -23,8 +23,8 @@ const TABS = [
 
 const PRESET_REPOS = [
   { label: 'TerrellOS (this app)',     url: 'https://github.com/tmdesigns/terrellos',            branch: 'main' },
-  { label: 'Heavenly Eternal Echo',    url: 'https://github.com/tmdesigns/heavenly-eternal-echo', branch: 'main' },
-  { label: 'Pastor AI Connect',        url: 'https://github.com/tmdesigns/pastor-ai-connect',    branch: 'main' },
+  { label: 'TerrellOS',    url: 'https://github.com/tmdesigns/heavenly-eternal-echo', branch: 'main' },
+  { label: 'TerrellOS',        url: 'https://github.com/tmdesigns/pastor-ai-connect',    branch: 'main' },
   { label: 'Kindred Love Birds',       url: 'https://github.com/tmdesigns/kindred-love-birds',   branch: 'main' },
   { label: 'ResidentSync AI',          url: 'https://github.com/tmdesigns/residentsync-ai',      branch: 'main' },
   { label: 'TMG Torque',               url: 'https://github.com/tmdesigns/tmg-torque',           branch: 'main' },
