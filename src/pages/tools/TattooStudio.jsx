@@ -1,312 +1,195 @@
-import { useState, useCallback } from 'react';
+/**
+ * TattooStudio.jsx — TerrellOS AI Tattoo Studio
+ * Wired to /v1/tattoo/generate on the live backend.
+ */
+import { useState } from 'react';
+import { Loader2, Download, RefreshCw, Wand2, Image } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 
 const STYLES = [
-  { id: 'concept',        label: 'Concept Art',      emoji: '🎨', desc: 'Full rendered tattoo art' },
-  { id: 'stencil',        label: 'Stencil / Outline', emoji: '📋', desc: 'Transfer-ready black outlines' },
-  { id: 'blackwork',      label: 'Blackwork',         emoji: '⚫', desc: 'Bold solid black fills' },
-  { id: 'realism',        label: 'Black & Grey',      emoji: '🩶', desc: 'Photorealistic shading' },
-  { id: 'fineline',       label: 'Fine Line',         emoji: '✏️', desc: 'Delicate thin lines' },
-  { id: 'neotraditional', label: 'Neo Traditional',   emoji: '🌹', desc: 'Bold outlines + rich color' },
-  { id: 'japanese',       label: 'Japanese / Irezumi',emoji: '🐉', desc: 'Traditional Irezumi style' },
-  { id: 'geometric',      label: 'Geometric',         emoji: '🔷', desc: 'Sacred geometry + dotwork' },
+  { id: 'blackwork',   label: 'Blackwork',      emoji: '⬛' },
+  { id: 'japanese',    label: 'Japanese',        emoji: '🌸' },
+  { id: 'geometric',   label: 'Geometric',       emoji: '🔷' },
+  { id: 'fineline',    label: 'Fine Line',       emoji: '✒️' },
+  { id: 'traditional', label: 'Traditional',     emoji: '⚓' },
+  { id: 'watercolor',  label: 'Watercolor',      emoji: '🎨' },
+  { id: 'tribal',      label: 'Tribal',          emoji: '🗿' },
+  { id: 'realism',     label: 'Realism',         emoji: '📷' },
+  { id: 'stencil',     label: 'Stencil/Outline', emoji: '📋' },
 ];
 
-const PLACEMENTS = [
-  { id: 'sleeve', label: 'Full Sleeve' }, { id: 'forearm', label: 'Forearm' },
-  { id: 'chest', label: 'Chest Piece' }, { id: 'back', label: 'Full Back' },
-  { id: 'leg', label: 'Leg / Thigh' }, { id: 'neck', label: 'Neck' },
-  { id: 'hand', label: 'Hand' }, { id: 'ribcage', label: 'Ribcage' },
-];
-
-const QUICK_PROMPTS = [
-  'Japanese dragon sleeve with cherry blossoms',
-  'Christian lion with crown of thorns and cross',
-  'Black and grey realism wolf howling at moon',
-  'Tribal geometric forearm band',
-  'Cyberpunk skull with circuit board details',
-  'Angel warrior with sword and wings',
-  'Koi fish in waves Japanese style',
-  'Sacred heart with roses and daggers',
-  'Phoenix rising from flames',
-  'Mandala with geometric patterns',
-];
+const PLACEMENTS = ['Forearm','Upper Arm','Back','Chest','Calf','Thigh','Shoulder','Neck','Wrist','Ribcage'];
 
 export default function TattooStudio() {
   const [prompt, setPrompt] = useState('');
-  const [style, setStyle] = useState('concept');
-  const [placement, setPlacement] = useState('');
-  const [colorMode, setColorMode] = useState('color');
-  const [mode, setMode] = useState('generate'); // generate | outline | variations | vectorize
+  const [style, setStyle] = useState('blackwork');
+  const [placement, setPlacement] = useState('Forearm');
+  const [size, setSize] = useState('medium');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [savedToVault, setSavedToVault] = useState(false);
+  const [error, setError] = useState('');
+  const [history, setHistory] = useState([]);
 
-  const API = BACKEND_BASE_URL;
-  const APP_ID = import.meta.env.VITE_APP_ID || 'terrellos';
-  const headers = { 'Content-Type': 'application/json', 'X-App-ID': APP_ID };
-
-  const generate = useCallback(async () => {
+  const generate = async () => {
     if (!prompt.trim()) return;
-    setLoading(true); setError(null); setResult(null); setSavedToVault(false);
+    setLoading(true); setError(''); setResult(null);
     try {
-      let endpoint = '/v1/tattoo/generate';
-      let body = { prompt, style, placement: placement || undefined, color_mode: colorMode, quality: 'hd' };
-      if (mode === 'outline') { endpoint = '/v1/tattoo/outline'; body = { prompt, placement: placement || undefined }; }
-      if (mode === 'variations') { endpoint = '/v1/tattoo/variations'; body = { prompt, count: 3 }; }
-      if (mode === 'vectorize') { endpoint = '/v1/tattoo/vectorize'; body = { description: prompt, output_format: 'svg' }; }
+      // Try /v1/tattoo/generate first, fall back to /v1/images/generate
+      let res = null;
+      try {
+        const r = await fetch(`${BACKEND_BASE_URL}/v1/tattoo/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-App-ID': 'terrellos' },
+          body: JSON.stringify({ prompt, style, placement, size }),
+          signal: AbortSignal.timeout(60000),
+        });
+        if (r.ok) res = await r.json();
+      } catch {}
 
-      const res = await fetch(`${API}${endpoint}`, { method: 'POST', headers, body: JSON.stringify(body) });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.detail || 'Generation failed');
-      setResult(data);
+      if (!res) {
+        const r2 = await fetch(`${BACKEND_BASE_URL}/v1/images/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-App-ID': 'terrellos' },
+          body: JSON.stringify({
+            prompt: `Tattoo design: ${prompt}. Style: ${style}. Clean tattoo artwork, high contrast, suitable for skin. Black and white outline, professional tattoo quality.`,
+            quality: 'hd',
+          }),
+          signal: AbortSignal.timeout(60000),
+        });
+        if (!r2.ok) throw new Error(`Generation failed: HTTP ${r2.status}`);
+        res = await r2.json();
+      }
+
+      const imgUrl = res?.image_url || res?.url || res?.data?.[0]?.url;
+      if (!imgUrl) throw new Error('No image URL returned from backend');
+
+      const entry = { url: imgUrl, prompt, style, placement, ts: Date.now() };
+      setResult(entry);
+      setHistory(prev => [entry, ...prev].slice(0, 8));
     } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
-  }, [prompt, style, placement, colorMode, mode, API]);
+    setLoading(false);
+  };
 
-  const saveToVault = useCallback(async () => {
-    if (!result?.image_url) return;
-    try {
-      await fetch(`${API}/v1/gallery/save`, {
-        method: 'POST', headers,
-        body: JSON.stringify({
-          user_id: 'founder', app_id: APP_ID,
-          title: prompt.slice(0, 60),
-          prompt, image_url: result.image_url,
-          type: mode === 'outline' ? 'tattoo_stencil' : 'tattoo_concept',
-          style, tags: [style, colorMode, placement].filter(Boolean),
-        }),
-      });
-      setSavedToVault(true);
-    } catch (e) { console.error('Vault save failed', e); }
-  }, [result, prompt, style, colorMode, mode, placement, API]);
+  const download = (url, name) => {
+    const a = document.createElement('a'); a.href = url;
+    a.download = name || `terrellos-tattoo-${Date.now()}.png`; a.click();
+  };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-4xl">🎯</span>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-                AI Tattoo Studio
-              </h1>
-              <p className="text-gray-400 text-sm">Concept art · Stencils · Vectors · Variations · Powered by TerrellOS</p>
+    <div className="p-4 lg:p-8 max-w-5xl mx-auto space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
+          <Wand2 className="w-5 h-5 text-orange-400" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-foreground">AI Tattoo Studio</h1>
+          <p className="text-xs text-muted-foreground">DALL-E 3 · terrellos-backend.fly.dev</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Controls */}
+        <div className="space-y-5">
+          {/* Prompt */}
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-2">Describe Your Tattoo</label>
+            <textarea value={prompt} onChange={e => setPrompt(e.target.value)}
+              rows={4} placeholder="e.g. a fierce dragon wrapping around a lotus flower, with smoke and flames…"
+              className="w-full bg-card border border-border focus:border-orange-500/50 text-foreground text-sm rounded-xl px-4 py-3 focus:outline-none resize-none transition-colors" />
+          </div>
+
+          {/* Style */}
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-2">Style</label>
+            <div className="grid grid-cols-3 gap-2">
+              {STYLES.map(s => (
+                <button key={s.id} onClick={() => setStyle(s.id)}
+                  className={cn('text-xs px-2 py-2 rounded-xl border transition-all text-left',
+                    style === s.id
+                      ? 'bg-orange-500/20 border-orange-500/50 text-orange-200'
+                      : 'bg-card border-border text-muted-foreground hover:border-orange-500/30')}>
+                  {s.emoji} {s.label}
+                </button>
+              ))}
             </div>
           </div>
+
+          {/* Placement + Size */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-2">Placement</label>
+              <select value={placement} onChange={e => setPlacement(e.target.value)}
+                className="w-full bg-card border border-border text-foreground rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500/50 transition-colors">
+                {PLACEMENTS.map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-2">Size</label>
+              <select value={size} onChange={e => setSize(e.target.value)}
+                className="w-full bg-card border border-border text-foreground rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500/50 transition-colors">
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large / Sleeve</option>
+              </select>
+            </div>
+          </div>
+
+          {error && <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3">{error}</p>}
+
+          <button onClick={generate} disabled={loading || !prompt.trim()}
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-rose-700 hover:from-orange-500 hover:to-rose-600 disabled:opacity-40 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-orange-500/20">
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating… (~30s)</> : <><Wand2 className="w-4 h-4" /> Generate Tattoo</>}
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* LEFT — Controls */}
-          <div className="space-y-6">
-            {/* Mode Tabs */}
-            <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800">
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Generation Mode</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: 'generate',  label: '🎨 Concept Art' },
-                  { id: 'outline',   label: '📋 Stencil' },
-                  { id: 'variations',label: '🔄 Variations' },
-                  { id: 'vectorize', label: '📐 Vectorize' },
-                ].map(m => (
-                  <button key={m.id} onClick={() => setMode(m.id)}
-                    className={`py-2 px-3 rounded-xl text-sm font-medium transition-all ${
-                      mode === m.id ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                    }`}>
-                    {m.label}
-                  </button>
+        {/* Result */}
+        <div className="space-y-4">
+          <div className="bg-card border border-border rounded-2xl overflow-hidden aspect-square flex items-center justify-center">
+            {loading ? (
+              <div className="flex flex-col items-center gap-3 text-center p-6">
+                <Loader2 className="w-10 h-10 text-orange-400 animate-spin" />
+                <p className="text-sm text-muted-foreground">Creating your tattoo design…</p>
+                <p className="text-xs text-muted-foreground opacity-60">DALL-E 3 · up to 30 seconds</p>
+              </div>
+            ) : result ? (
+              <img src={result.url} alt={result.prompt}
+                className="w-full h-full object-contain rounded-2xl" />
+            ) : (
+              <div className="flex flex-col items-center gap-3 text-center p-6">
+                <Image className="w-12 h-12 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">Your tattoo will appear here</p>
+              </div>
+            )}
+          </div>
+
+          {result && (
+            <div className="flex gap-2">
+              <button onClick={() => download(result.url)}
+                className="flex-1 flex items-center justify-center gap-2 bg-card border border-border hover:border-orange-500/40 text-muted-foreground hover:text-foreground py-2.5 rounded-xl text-sm transition-all">
+                <Download className="w-4 h-4" /> Download
+              </button>
+              <button onClick={generate}
+                className="flex items-center gap-2 bg-card border border-border hover:border-orange-500/40 text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-xl text-sm transition-all">
+                <RefreshCw className="w-4 h-4" /> Regenerate
+              </button>
+            </div>
+          )}
+
+          {/* History */}
+          {history.length > 1 && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Recent generations</p>
+              <div className="grid grid-cols-4 gap-2">
+                {history.slice(1).map((h, i) => (
+                  <div key={i} className="aspect-square rounded-lg overflow-hidden border border-border cursor-pointer hover:border-orange-500/40 transition-colors"
+                    onClick={() => setResult(h)}>
+                    <img src={h.url} alt={h.prompt} className="w-full h-full object-cover" />
+                  </div>
                 ))}
               </div>
             </div>
-
-            {/* Prompt Input */}
-            <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800">
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Your Tattoo Idea</p>
-              <textarea
-                value={prompt}
-                onChange={e => setPrompt(e.target.value)}
-                placeholder="Describe your tattoo... (e.g. Japanese dragon sleeve with cherry blossoms)"
-                className="w-full bg-gray-800 rounded-xl p-3 text-white text-sm resize-none border border-gray-700 focus:border-purple-500 focus:outline-none"
-                rows={3}
-              />
-              {/* Quick prompts */}
-              <div className="mt-3">
-                <p className="text-xs text-gray-600 mb-2">Quick ideas:</p>
-                <div className="flex flex-wrap gap-1">
-                  {QUICK_PROMPTS.slice(0, 5).map(p => (
-                    <button key={p} onClick={() => setPrompt(p)}
-                      className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white px-2 py-1 rounded-lg transition-all">
-                      {p.slice(0, 30)}…
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Style Selector */}
-            {mode === 'generate' && (
-              <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800">
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Style</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {STYLES.map(s => (
-                    <button key={s.id} onClick={() => setStyle(s.id)}
-                      className={`text-left p-3 rounded-xl border transition-all ${
-                        style === s.id
-                          ? 'border-purple-500 bg-purple-500/10'
-                          : 'border-gray-700 bg-gray-800 hover:border-gray-600'
-                      }`}>
-                      <div className="flex items-center gap-2">
-                        <span>{s.emoji}</span>
-                        <div>
-                          <p className="text-xs font-medium text-white">{s.label}</p>
-                          <p className="text-xs text-gray-500">{s.desc}</p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Placement + Color Mode */}
-            {mode !== 'vectorize' && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Placement</p>
-                  <select value={placement} onChange={e => setPlacement(e.target.value)}
-                    className="w-full bg-gray-800 text-white text-sm rounded-xl p-2 border border-gray-700 focus:outline-none focus:border-purple-500">
-                    <option value="">Any placement</option>
-                    {PLACEMENTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-                  </select>
-                </div>
-                <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Color Mode</p>
-                  <select value={colorMode} onChange={e => setColorMode(e.target.value)}
-                    className="w-full bg-gray-800 text-white text-sm rounded-xl p-2 border border-gray-700 focus:outline-none focus:border-purple-500">
-                    <option value="color">Full Color</option>
-                    <option value="blackgrey">Black & Grey</option>
-                    <option value="blackwork">Blackwork Only</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Generate Button */}
-            <button onClick={generate} disabled={loading || !prompt.trim()}
-              className="w-full py-4 rounded-2xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed
-                bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 hover:from-purple-500 hover:via-pink-500 hover:to-orange-400
-                shadow-lg shadow-purple-500/20">
-              {loading ? (
-                <span className="flex items-center justify-center gap-3">
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Generating...
-                </span>
-              ) : (
-                <span>✨ Generate {mode === 'outline' ? 'Stencil' : mode === 'variations' ? 'Variations' : mode === 'vectorize' ? 'Vector Guide' : 'Tattoo'}</span>
-              )}
-            </button>
-          </div>
-
-          {/* RIGHT — Results */}
-          <div className="space-y-4">
-            {error && (
-              <div className="bg-red-900/30 border border-red-500/50 rounded-2xl p-4">
-                <p className="text-red-400 text-sm">❌ {error}</p>
-              </div>
-            )}
-
-            {result && (
-              <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
-                {/* Single image result */}
-                {result.image_url && (
-                  <div>
-                    <img src={result.image_url} alt={prompt}
-                      className="w-full aspect-square object-cover" />
-                    <div className="p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-white font-medium text-sm">{prompt.slice(0, 60)}{prompt.length > 60 ? '...' : ''}</p>
-                          <p className="text-gray-500 text-xs mt-1">{result.style} · {result.type}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <a href={result.image_url} download target="_blank" rel="noopener noreferrer"
-                            className="text-xs bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg transition-all">
-                            ⬇️ Save
-                          </a>
-                          <button onClick={saveToVault} disabled={savedToVault}
-                            className={`text-xs px-3 py-1.5 rounded-lg transition-all ${
-                              savedToVault ? 'bg-green-700 text-green-200' : 'bg-purple-700 hover:bg-purple-600 text-white'
-                            }`}>
-                            {savedToVault ? '✅ Saved' : '🗄️ Vault'}
-                          </button>
-                        </div>
-                      </div>
-                      {/* Action buttons */}
-                      <div className="grid grid-cols-3 gap-2">
-                        <button onClick={() => { setMode('outline'); generate(); }}
-                          className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-2 rounded-lg transition-all">
-                          📋 Make Stencil
-                        </button>
-                        <button onClick={() => { setMode('vectorize'); generate(); }}
-                          className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-2 rounded-lg transition-all">
-                          📐 Vectorize
-                        </button>
-                        <button onClick={generate}
-                          className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-2 rounded-lg transition-all">
-                          🔄 Regenerate
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Variations result */}
-                {result.variations && (
-                  <div className="p-4">
-                    <p className="text-white font-medium mb-3">3 Style Variations</p>
-                    <div className="grid grid-cols-1 gap-4">
-                      {result.variations.map((v, i) => (
-                        <div key={i} className="bg-gray-800 rounded-xl overflow-hidden">
-                          {v.image_url ? (
-                            <>
-                              <img src={v.image_url} alt={v.style} className="w-full aspect-square object-cover" />
-                              <div className="p-3 flex items-center justify-between">
-                                <span className="text-white text-sm font-medium capitalize">{v.style}</span>
-                                <a href={v.image_url} download target="_blank" rel="noopener noreferrer"
-                                  className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded-lg">⬇️</a>
-                              </div>
-                            </>
-                          ) : (
-                            <p className="p-3 text-red-400 text-xs">{v.style}: {v.error}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Vector guide result */}
-                {result.vector_guide && (
-                  <div className="p-4">
-                    <p className="text-white font-medium mb-3">📐 Vector Production Guide</p>
-                    <div className="bg-gray-800 rounded-xl p-4">
-                      <pre className="text-gray-300 text-xs whitespace-pre-wrap leading-relaxed">{result.vector_guide}</pre>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!result && !loading && !error && (
-              <div className="bg-gray-900 rounded-2xl border border-dashed border-gray-700 p-12 flex flex-col items-center justify-center text-center">
-                <span className="text-5xl mb-4">🎯</span>
-                <p className="text-gray-400 font-medium">Your tattoo design will appear here</p>
-                <p className="text-gray-600 text-sm mt-2">Describe it above and hit Generate</p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
