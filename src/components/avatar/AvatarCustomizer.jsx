@@ -1,5 +1,5 @@
 /**
- * AvatarCustomizer.jsx — TerrellOS / Heavenly Eternal Echo
+ * AvatarCustomizer.jsx — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
  * Xbox-style floating sidebar for real-time avatar customization.
  * Connected live to AvatarScene — every change updates the 3D scene instantly.
