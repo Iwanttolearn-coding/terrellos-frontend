@@ -1,5 +1,5 @@
 /**
- * FounderBackendPanel.jsx — TerrellOS / Heavenly Eternal Echo
+ * FounderBackendPanel.jsx — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
  * Full backend capability panel for the /founder page.
  * Shows: online/offline, image AI, Whisper, ElevenLabs, last-checked,
@@ -14,7 +14,7 @@ import {
   Image, Mic, Volume2, CheckCircle, XCircle, AlertTriangle, Activity,
 } from 'lucide-react';
 
-const BACKEND_URL = 'https://terrellos-backend.onrender.com';
+const BACKEND_URL = 'https://terrellos-backend.fly.dev';
 
 function CapabilityRow({ icon: Icon, label, ready, readyLabel, missingLabel, loading }) {
   if (loading) {
