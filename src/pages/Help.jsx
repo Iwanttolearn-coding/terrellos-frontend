@@ -26,7 +26,7 @@ const SECTIONS = [
     icon: Book,
     title: 'App Portfolio',
     items: [
-      'TerrellOS controls Pastor AI Connect, Heavenly Eternal Echo, Kindred Love Birds, ResidentSync AI, All Around Customs, TMG Torque, Builder\'s AI, and Tattoo AI Generator.',
+      'TerrellOS controls TerrellOS, TerrellOS, Kindred Love Birds, ResidentSync AI, All Around Customs, TMG Torque, Builder\'s AI, and Tattoo AI Generator.',
       'Each app shares the TerrellOS backend API layer.',
     ],
   },
