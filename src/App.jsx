@@ -5,6 +5,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
@@ -93,10 +94,26 @@ import TattooStudio from '@/pages/tools/TattooStudio'
 import CreatorVault from '@/pages/tools/CreatorVault'
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, access } = useAuth();
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  // ── Loading state — always show before ANY redirect logic ──────────────────
+  if (isLoadingAuth) {
     return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-xl gradient-purple-blue flex items-center justify-center glow-purple">
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          </div>
+          <p className="text-xs text-muted-foreground font-mono tracking-widest animate-pulse">TERRELLOS LOADING…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Access resolved — render the app. No redirects. ───────────────────────
+  // Founders get unrestricted access. Guests can browse public pages.
+  return (
+  return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 rounded-xl gradient-purple-blue flex items-center justify-center glow-purple">
