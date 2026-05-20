@@ -18,6 +18,7 @@ async function apiFetch(path, options = {}) {
     const res = await fetch(`${BASE_URL}${path}`, {
       headers: {
         'Content-Type': 'application/json',
+      'X-App-ID': import.meta.env.VITE_APP_ID || 'terrellos',
         ...(options.headers || {})
       },
       signal: ctrl.signal,
