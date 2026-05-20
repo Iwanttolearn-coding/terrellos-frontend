@@ -1,11 +1,11 @@
 /**
- * apiClient.js — TerrellOS / Heavenly Eternal Echo
+ * apiClient.js — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
  * Centralized HTTP transport layer.
  * ALL backend calls go here. No Base44 SDK. No inline fetch().
  *
- * Backend: https://terrellos-backend.onrender.com (Render / FastAPI v7)
- * Docs:    https://terrellos-backend.onrender.com/docs
+ * Backend: https://terrellos-backend.fly.dev (Render / FastAPI v7)
+ * Docs:    https://terrellos-backend.fly.dev/docs
  *
  * Usage:
  *   import { api } from '@/lib/apiClient';
@@ -18,8 +18,8 @@
 // ── Config ────────────────────────────────────────────────────────
 const API_BASE =
   typeof import.meta !== 'undefined'
-    ? (import.meta.env?.VITE_BACKEND_URL || import.meta.env?.VITE_API_URL || 'https://terrellos-backend.onrender.com')
-    : 'https://terrellos-backend.onrender.com';
+    ? (import.meta.env?.VITE_BACKEND_URL || import.meta.env?.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev')
+    : 'https://terrellos-backend.fly.dev';
 
 const DEFAULT_TIMEOUT_MS = 30_000;   // 30s normal requests
 const UPLOAD_TIMEOUT_MS  = 90_000;   // 90s for file uploads
