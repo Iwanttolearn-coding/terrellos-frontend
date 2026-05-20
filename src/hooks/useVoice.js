@@ -1,5 +1,5 @@
 /**
- * useVoice.js — Heavenly Eternal Echo
+ * useVoice.js — TerrellOS
  * ─────────────────────────────────────────────────────────────────
  * React hook for ElevenLabs-powered voice synthesis via Render backend.
  *
