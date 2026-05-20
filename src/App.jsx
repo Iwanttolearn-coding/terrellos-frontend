@@ -89,6 +89,8 @@ import LiveTranscribe from './pages/LiveTranscribe'
 import LeadershipTraining from './pages/LeadershipTraining'
 import ResearchFreemasonry from './pages/ResearchFreemasonry'
 import SermonPrep from './pages/SermonPrep'
+import TattooStudio from '@/pages/tools/TattooStudio'
+import CreatorVault from '@/pages/tools/CreatorVault'
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -157,7 +159,9 @@ const AuthenticatedApp = () => {
         <Route path="/tools/logs" element={<LogsTool />} />
         <Route path="/tools/system-status" element={<SystemStatus />} />
         <Route path="/tools/avatar-lab" element={<AvatarLab />} />
-        <Route path="/tools/voice-lab" element={<VoiceLab />} />
+        <Route path="/tools/tattoo-studio" element={<TattooStudio />} />
+                <Route path="/tools/creator-vault" element={<CreatorVault />} />
+                <Route path="/tools/voice-lab" element={<VoiceLab />} />
         <Route path="/tools/memory-vault" element={<MemoryVault />} />
         <Route path="/tools/chat-engine" element={<ChatEngine />} />
         <Route path="/tools/database" element={<DatabaseTool />} />
