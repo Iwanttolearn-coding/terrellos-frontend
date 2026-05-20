@@ -13,7 +13,7 @@ import { safeInvoke, api, sendChat } from '@/lib/apiClient';
 
 const FOUNDER_EMAILS = ['millzterrell210@icloud.com', 'millsterrell5@gmail.com'];
 const LIVE_APP_URL = 'https://app.tm-dezigns.org';
-const BACKEND_URL = 'https://terrellos-backend.onrender.com';
+const BACKEND_URL = 'https://terrellos-backend.fly.dev';
 
 // ── Status Badge ──────────────────────────────────────────────────────────────
 function StatusDot({ status }) {
