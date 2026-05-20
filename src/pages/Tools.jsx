@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { isFounderEmail, getFounderPermissions } from '@/lib/founderIdentity';
 import { getEffectiveAccess } from '@/lib/ownerConfig';
 import { Cpu, FolderKanban, HardDrive, ScrollText, Activity, ShieldCheck, Smile, Mic, Brain, MessageSquare, Database, Settings2, ChevronRight, GitBranch, FileCode, Layers, Terminal, DollarSign, Rocket, BarChart2, Zap, Globe, CreditCard, Heart, TrendingDown } from 'lucide-react';
 
@@ -37,15 +37,21 @@ const TOOLS = [
   { path: '/credit-dashboard',     label: 'Credit Monitor',    desc: 'Real-time usage & low-credit alerts',      icon: TrendingDown, color: 'from-red-600 to-orange-900',      perm: 'ai_tools' },
   { path: '/founder-story',        label: 'Founder Story',     desc: 'Terrell\'s journey of resilience & faith',  icon: Heart,        color: 'from-rose-600 to-pink-900',       perm: 'ai_tools' },
   { path: '/publish',              label: 'Publish',           desc: 'Deploy app to production & custom domain', icon: Globe,     color: 'from-green-600 to-emerald-900',   perm: 'developer_tools' },
+  { path: '/tools/tattoo-studio',  label: '🎯 Tattoo Studio',  desc: 'AI tattoo concepts, stencils & vectors',     icon: Cpu,       color: 'from-pink-600 to-rose-900',        perm: 'ai_tools' },
+  { path: '/tools/creator-vault',  label: '🗄️ Creator Vault',  desc: 'Gallery, folders, prompt history & assets',  icon: HardDrive, color: 'from-purple-600 to-violet-900',    perm: 'ai_tools' },
 ];
 
 export default function Tools() {
   const [access, setAccess] = useState(null);
 
   useEffect(() => {
-    base44.auth.me()
-      .then(u => setAccess(getEffectiveAccess(u)))
-      .catch(() => setAccess(getEffectiveAccess(null)));
+    // Resolve founder access without Base44 SDK
+    const email = localStorage.getItem('user_email') || '';
+    if (isFounderEmail(email)) {
+      setAccess({ ...getFounderPermissions(), isSuperAdmin: true });
+    } else {
+      setAccess({ role: 'user', isSuperAdmin: false });
+    }
   }, []);
 
   return (
