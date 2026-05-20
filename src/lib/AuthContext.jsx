@@ -1,146 +1,154 @@
-import React, { createContext, useState, useContext, useEffect } from 'react'; // v2
-import { base44 } from '@/api/base44Client';
-import { appParams } from '@/lib/app-params';
-import { getFounderAccess } from '@/lib/founderAccess';
-import { isOwnerEmail } from '@/lib/ownerConfig';
-import { applyFounderOverride } from '@/lib/production';
+/**
+ * AuthContext.jsx — TerrellOS Standalone Auth
+ * ─────────────────────────────────────────────────────────────────
+ * NO Base44 platform dependency. NO /api/apps/public calls.
+ * Auth is local-first: checks localStorage for saved email/session,
+ * then validates against the TerrellOS backend if a token exists.
+ * Founders bypass all checks — full access always.
+ */
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { resolveUserAccess, isFounder, FOUNDER_EMAILS } from '@/lib/resolveUserAccess';
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
+const APP_ID = import.meta.env.VITE_APP_ID || 'terrellos';
+const STORAGE_KEY = 'terrellos_user';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(undefined); // undefined = still loading
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
+  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
   const [authError, setAuthError] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [appPublicSettings, setAppPublicSettings] = useState(null);
-  const [founderAccess, setFounderAccess] = useState(null);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    checkAppState(controller.signal);
-    return () => controller.abort();
+  // Computed from user — never read raw values elsewhere
+  const access = resolveUserAccess(user);
+
+  const isAuthenticated = user !== null && user !== undefined && !access.loading;
+
+  const initAuth = useCallback(async () => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
+
+    try {
+      // 1. Check localStorage for persisted session
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed?.email) {
+            // Apply founder override immediately — no async needed
+            const resolved = isFounder(parsed.email)
+              ? { ...parsed, role: 'super_admin', plan: 'elite', all_tools_access: true }
+              : parsed;
+            setUser(resolved);
+            setIsLoadingAuth(false);
+            setAuthChecked(true);
+            return;
+          }
+        } catch {}
+      }
+
+      // 2. No saved session — check if this is an embedded/tokenized context
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlToken = urlParams.get('access_token') || urlParams.get('token');
+      const storedToken = localStorage.getItem('terrellos_token');
+      const token = urlToken || storedToken;
+
+      if (token) {
+        if (urlToken) {
+          localStorage.setItem('terrellos_token', urlToken);
+          // Clean token from URL
+          urlParams.delete('access_token');
+          urlParams.delete('token');
+          const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+          window.history.replaceState({}, '', newUrl);
+        }
+        // Try to validate token with backend
+        try {
+          const res = await fetch(`${BACKEND_URL}/v1/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}`, 'X-App-ID': APP_ID },
+            signal: AbortSignal.timeout(8000),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const resolved = isFounder(data.email)
+              ? { ...data, role: 'super_admin', plan: 'elite', all_tools_access: true }
+              : data;
+            setUser(resolved);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(resolved));
+            setIsLoadingAuth(false);
+            setAuthChecked(true);
+            return;
+          }
+        } catch (e) {
+          console.warn('[Auth] Token validation failed, clearing token');
+          localStorage.removeItem('terrellos_token');
+        }
+      }
+
+      // 3. No session, no token — set user to null (guest) and continue
+      setUser(null);
+    } catch (e) {
+      console.error('[Auth] Init error:', e);
+      setUser(null); // fail open — don't block the app
+    } finally {
+      setIsLoadingAuth(false);
+      setAuthChecked(true);
+    }
   }, []);
 
-  const checkAppState = async (signal) => {
-    try {
-      setIsLoadingPublicSettings(true);
-      setAuthError(null);
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
 
-      // Fetch public settings directly via fetch — no Base44 SDK axios client
-      try {
-        const res = await fetch(`/api/apps/public/prod/public-settings/by-id/${appParams.appId}`, {
-          headers: {
-            'X-App-Id': appParams.appId,
-            ...(appParams.token ? { Authorization: `Bearer ${appParams.token}` } : {}),
-          },
-        });
+  // ── Founder shortcut login ─────────────────────────────────────────────────
+  const loginAsFounder = useCallback((email) => {
+    if (!isFounder(email)) return false;
+    const founderUser = {
+      email,
+      role: 'super_admin',
+      plan: 'elite',
+      all_tools_access: true,
+      display_name: 'Terrell Millz',
+    };
+    setUser(founderUser);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(founderUser));
+    return true;
+  }, []);
 
-        if (res.ok) {
-          const publicSettings = await res.json();
-          setAppPublicSettings(publicSettings);
-
-          if (appParams.token) {
-            await checkUserAuth(signal);
-          } else {
-            setIsLoadingAuth(false);
-            setIsAuthenticated(false);
-            setAuthChecked(true);
-          }
-        } else {
-          const data = await res.json().catch(() => ({}));
-          const reason = data?.extra_data?.reason;
-
-          if (res.status === 403 && reason) {
-            if (reason === 'auth_required') {
-              setAuthError({ type: 'auth_required', message: 'Authentication required' });
-            } else if (reason === 'user_not_registered') {
-              setAuthError({ type: 'user_not_registered', message: 'User not registered for this app' });
-            } else {
-              setAuthError({ type: reason, message: data?.message || 'Access denied' });
-            }
-          } else {
-            setAuthError({ type: 'unknown', message: data?.message || 'Failed to load app' });
-          }
-          setIsLoadingAuth(false);
-        }
-        setIsLoadingPublicSettings(false);
-      } catch (appError) {
-        console.error('App state check failed:', appError);
-        setAuthError({ type: 'unknown', message: appError.message || 'Failed to load app' });
-        setIsLoadingPublicSettings(false);
-        setIsLoadingAuth(false);
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      setAuthError({ type: 'unknown', message: error.message || 'An unexpected error occurred' });
-      setIsLoadingPublicSettings(false);
-      setIsLoadingAuth(false);
-    }
-  };
-
-  const checkUserAuth = async (signal) => {
-    try {
-      setIsLoadingAuth(true);
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('auth_timeout')), 12000)
-      );
-
-      let currentUser = await Promise.race([base44.auth.me(), timeoutPromise]);
-
-      if (signal?.aborted) return;
-
-      currentUser = applyFounderOverride(currentUser) || currentUser;
-      setUser(currentUser);
-      setFounderAccess(getFounderAccess(currentUser));
-      setIsAuthenticated(true);
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
-    } catch (error) {
-      if (signal?.aborted) return;
-      console.error('[AuthContext] user auth check failed:', error?.message);
-      setIsLoadingAuth(false);
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-
-      if (error.message === 'auth_timeout') {
-        setAuthError({ type: 'auth_required', message: 'Auth timed out — please reload' });
-      } else if (error.status === 401 || error.status === 403) {
-        setAuthError({ type: 'auth_required', message: 'Authentication required' });
-      }
-    }
-  };
-
-  const logout = (shouldRedirect = true) => {
+  // ── Logout ─────────────────────────────────────────────────────────────────
+  const logout = useCallback((shouldRedirect = false) => {
     setUser(null);
-    setIsAuthenticated(false);
-    if (shouldRedirect) {
-      base44.auth.logout(window.location.href);
-    } else {
-      base44.auth.logout();
-    }
-  };
+    setAuthChecked(false);
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('terrellos_token');
+    if (shouldRedirect) window.location.href = '/';
+  }, []);
 
-  const navigateToLogin = () => {
-    base44.auth.redirectToLogin(window.location.href);
-  };
+  // ── Legacy compat — navigateToLogin just goes to / ─────────────────────────
+  const navigateToLogin = useCallback(() => {
+    // Don't redirect to Base44. Just clear state and let the app handle it.
+    logout(false);
+  }, [logout]);
 
   return (
     <AuthContext.Provider value={{
       user,
+      access,
       isAuthenticated,
       isLoadingAuth,
-      isLoadingPublicSettings,
+      isLoadingPublicSettings: false,
       authError,
-      appPublicSettings,
       authChecked,
       logout,
       navigateToLogin,
-      checkUserAuth,
-      checkAppState,
-      founderAccess,
+      loginAsFounder,
+      checkUserAuth: initAuth,
+      checkAppState: initAuth,
+      founderAccess: access.founder ? access : null,
+      appPublicSettings: { app_name: 'TerrellOS' },
     }}>
       {children}
     </AuthContext.Provider>
@@ -149,8 +157,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
