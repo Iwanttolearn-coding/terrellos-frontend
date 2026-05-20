@@ -1,80 +1,50 @@
 /**
- * resolveUserAccess.js — TerrellOS Universal Permission Resolver
- * ─────────────────────────────────────────────────────────────────
- * ONE function. Used everywhere. Never read raw user.plan or user.role directly.
- * Founder emails always resolve to full access — cannot be overridden by DB state.
+ * resolveUserAccess.js — TerrellOS
+ * Isolated auth layer. Uses terrellos_user localStorage key.
+ * Founder emails ALWAYS resolve to super_admin. No downgrade ever.
  */
+const FOUNDER_EMAILS = ['millzterrell210@icloud.com', 'millzterrell5@gmail.com'];
+const STORAGE_KEY = 'terrellos_user';
 
-const FOUNDER_EMAILS = [
-  'millzterrell210@icloud.com',
-  'millzterrell5@gmail.com',
-];
+export function isFounder(email) {
+  return FOUNDER_EMAILS.includes((email || '').toLowerCase().trim());
+}
 
 export function resolveUserAccess(user) {
-  // Not loaded yet — return safe loading state (not guest, not founder)
-  if (user === undefined) {
-    return {
-      loading: true,
-      role: 'loading',
-      plan: 'loading',
-      founder: false,
-      toolsAccess: false,
-      adminAccess: false,
-      unrestricted: false,
-    };
+  if (!user?.email) return { role: 'guest', founder: false, allAccess: false, plan: 'free' };
+
+  // Founder ALWAYS wins — no route can downgrade this
+  if (isFounder(user.email)) {
+    return { role: 'super_admin', founder: true, allAccess: true, plan: 'founder' };
   }
-  // No user — guest
-  if (!user) {
-    return {
-      loading: false,
-      role: 'guest',
-      plan: 'free',
-      founder: false,
-      toolsAccess: false,
-      adminAccess: false,
-      unrestricted: false,
-    };
-  }
-  const email = (user.email || '').toLowerCase().trim();
-  // Founder override — always full access
-  if (FOUNDER_EMAILS.includes(email)) {
-    return {
-      loading: false,
-      role: 'super_admin',
-      plan: 'elite',
-      founder: true,
-      toolsAccess: true,
-      adminAccess: true,
-      unrestricted: true,
-      isSuperAdmin: true,
-      allToolsUnlocked: true,
-      billingBypass: true,
-      displayPlan: 'Founder ✦',
-    };
-  }
-  // Regular user — read from DB but never null-crash
-  const role = user.role || 'member';
-  const plan = user.plan || 'free';
-  const isPro = ['pro', 'premium', 'elite', 'heritage', 'family'].includes(plan);
-  const isAdmin = ['admin', 'super_admin', 'moderator'].includes(role);
+
   return {
-    loading: false,
-    role,
-    plan,
+    role: user.role || 'member',
     founder: false,
-    toolsAccess: isPro || isAdmin || user.all_tools_access === true,
-    adminAccess: isAdmin,
-    unrestricted: false,
-    isSuperAdmin: role === 'super_admin',
-    allToolsUnlocked: user.all_tools_access === true,
-    billingBypass: false,
-    displayPlan: plan.charAt(0).toUpperCase() + plan.slice(1),
+    allAccess: false,
+    plan: user.plan || 'free',
   };
 }
 
-export function isFounder(email) {
-  if (!email) return false;
-  return FOUNDER_EMAILS.includes(email.toLowerCase().trim());
+export function saveUser(user) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(user)); } catch {}
+}
+
+export function loadUser() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    // Re-apply founder override on every load — prevents stale role cache
+    if (isFounder(user?.email)) {
+      return { ...user, role: 'super_admin', plan: 'founder', is_founder: true };
+    }
+    return user;
+  } catch { return null; }
+}
+
+export function clearUser() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
 }
 
 export { FOUNDER_EMAILS };
