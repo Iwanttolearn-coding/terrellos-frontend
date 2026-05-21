@@ -1,3 +1,4 @@
+import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { getEffectiveAccess } from '@/lib/ownerConfig';
@@ -85,8 +86,8 @@ export default function AIModels() {
 
   useEffect(() => {
     async function init() {
-      const u = await base44.auth.me().catch(() => null);
-      const acc = getEffectiveAccess(u);
+      const u = await Promise.resolve(loadUser()).catch(() => null);
+      const acc = resolveUserAccess(u);
       setAccess(acc);
 
       if (!acc.founder) { setLoading(false); return; }
