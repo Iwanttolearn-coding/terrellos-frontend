@@ -7,7 +7,7 @@ import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
  */
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { resolveUserAccess } from '@/lib/founderAccess';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import { healthCheck, BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
