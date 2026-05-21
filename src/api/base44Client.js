@@ -1,33 +1,28 @@
 /**
- * base44Client.js — TerrellOS
- * ─────────────────────────────────────────────────────────────────
- * Minimal stub. No external SDK. No Base44 platform calls.
- * All real auth lives in AuthContext.jsx + resolveUserAccess.js
+ * base44Client.js — TM Dezigns AI Designer
+ * SAFE STUB — replaces legacy Base44 SDK.
+ * All methods return safe defaults. No network calls. No throws. No loops.
+ * Auth is handled exclusively by AuthContext + resolveUserAccess.
  */
-import { appParams } from '@/lib/app-params';
+import { loadUser } from '@/lib/resolveUserAccess';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
+const noop = () => Promise.resolve(null);
 
-const auth = {
-  async me() {
-    const token = appParams.token || localStorage.getItem('terrellos_token');
-    if (!token) throw Object.assign(new Error('No token'), { status: 401 });
-    const res = await fetch(`${BACKEND_URL}/v1/auth/me`, {
-      headers: { Authorization: `Bearer ${token}`, 'X-App-ID': 'terrellos' },
-    });
-    if (!res.ok) throw Object.assign(new Error('Auth failed'), { status: res.status });
-    return res.json();
+const authStub = {
+  me: () => {
+    // Return localStorage user synchronously wrapped in Promise — no network call
+    return Promise.resolve(loadUser());
   },
-  logout(redirectUrl) {
-    localStorage.removeItem('terrellos_user');
-    localStorage.removeItem('terrellos_token');
-    // Redirect within the app, never to Base44 platform
-    window.location.href = redirectUrl || '/';
-  },
-  redirectToLogin(returnUrl) {
-    // Stay in-app — no external redirect
-    window.location.href = '/';
-  },
+  signIn:  noop,
+  signOut: noop,
+  token:   () => Promise.resolve(null),
 };
 
-export const base44 = { auth };
+export const base44 = {
+  auth:       authStub,
+  entities:   new Proxy({}, { get: () => ({ list: () => Promise.resolve([]), get: noop, create: noop, update: noop, delete: noop, filter: () => Promise.resolve([]) }) }),
+  functions:  new Proxy({}, { get: () => noop }),
+  integrations: new Proxy({}, { get: () => ({ getAuthUrl: noop }) }),
+};
+
+export default base44;
