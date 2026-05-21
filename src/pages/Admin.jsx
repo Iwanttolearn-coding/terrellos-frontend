@@ -1,7 +1,8 @@
+import { loadUser } from '@/lib/resolveUserAccess';
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { API_BASE_URL, APP_VERSION, ENVIRONMENT } from '@/lib/env';
-import { getEffectiveAccess } from '@/lib/ownerConfig';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import { pingBackend } from '@/lib/backendApi';
 import { getRealAnalytics } from '@/lib/persistence';
 import { notify } from '@/components/NotificationCenter';
@@ -78,7 +79,7 @@ export default function Admin() {
   }
 
   useEffect(() => {
-    base44.auth.me().then(u => { setUser(u); setAccess(getEffectiveAccess(u)); }).catch(() => {});
+    Promise.resolve(loadUser()); setAccess(resolveUserAccess(u)); }).catch(() => {});
     runPing();
   }, []);
 
@@ -86,7 +87,7 @@ export default function Admin() {
     if (tab === 'analytics') loadAnalytics();
   }, [tab]);
 
-  if (access && !access.isSuperAdmin) {
+  if (access && !access.founder) {
     return (
       <div className="p-8 text-center text-muted-foreground">
         <ShieldCheck className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -142,7 +143,7 @@ export default function Admin() {
           <Row label="Trial Exp."     value="N/A — OWNER ACCOUNT" accent />
           <Row label="AI Quota"       value="UNLIMITED" accent />
           <Row label="Upload Quota"   value="UNLIMITED" accent />
-          {access?.isSuperAdmin && (
+          {access?.founder && (
             <div className="mt-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-xs text-emerald-300 font-mono">
               ✓ Founder account verified · SUPER ADMIN · ELITE · ALL ACCESS · PRODUCTION
             </div>
