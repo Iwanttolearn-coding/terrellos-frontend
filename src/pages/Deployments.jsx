@@ -17,7 +17,7 @@ const ENVIRONMENTS = [
   {
     env: 'production',
     label: 'Production',
-    url: 'https://terrellos.vercel.app',
+    url: 'https://app.tm-dezigns.com',
     branch: 'main',
     isPrimary: true,
   },
@@ -132,7 +132,7 @@ export default function Deployments() {
               <EnvBadge />
             </h1>
             <div className="text-xs text-muted-foreground font-mono">
-              Primary → terrellos.vercel.app · v{APP_VERSION}
+              Primary → app.tm-dezigns.com · v{APP_VERSION}
             </div>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function Deployments() {
       {!IS_PRODUCTION && (
         <div className="mb-5 flex items-center gap-2 px-4 py-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 text-sm">
           <Shield className="w-4 h-4 flex-shrink-0" />
-          You are viewing from <span className="font-mono font-bold mx-1">{ENV.toUpperCase()}</span> — live keys and writes are disabled. Deploy to <span className="font-mono mx-1">terrellos.vercel.app</span> for production access.
+          You are viewing from <span className="font-mono font-bold mx-1">{ENV.toUpperCase()}</span> — live keys and writes are disabled. Deploy to <span className="font-mono mx-1">app.tm-dezigns.com</span> for production access.
         </div>
       )}
 
