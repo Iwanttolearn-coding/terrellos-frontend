@@ -65,7 +65,7 @@ export default function ReleaseGate() {
     const u = await base44.auth.me().catch(() => null);
     setUser(u);
 
-    if (u && isFounderEmail(u?.email)) {
+    if (u && resolveUserAccess(u?.email).founder) {
       const data = await base44.entities.Patch.list('-approved_at', 20).catch(() => []);
       setPatches(data.filter(p => p.status === 'approved'));
     }
@@ -239,7 +239,7 @@ export default function ReleaseGate() {
   }
 
   // Access gate
-  if (user !== null && !isFounderEmail(user?.email)) {
+  if (user !== null && !resolveUserAccess(user?.email).founder) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="card-glass rounded-2xl p-8 max-w-sm w-full text-center border border-destructive/30">
