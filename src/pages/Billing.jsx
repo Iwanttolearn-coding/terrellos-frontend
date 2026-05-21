@@ -1,3 +1,4 @@
+import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 /**
  * Billing.jsx — TerrellOS
  * AI credit usage, plan status, purchase history.
@@ -60,8 +61,7 @@ export default function Billing() {
   };
 
   useEffect(() => {
-    base44.auth.me()
-      .then(u => { setUser(u); setAccess(resolveUserAccess(u)); load(u); })
+    (async () => { const u = loadUser(); setUser(u); setAccess(resolveUserAccess(u)); load(u); })()
       .catch(() => { setAccess(resolveUserAccess(null)); setLoading(false); });
   }, []);
 
@@ -166,7 +166,7 @@ export default function Billing() {
             ['Email',        user?.email || '—'],
             ['Role',         access?.role || 'user'],
             ['Access Level', access?.accessLevel || 'standard'],
-            ['All Tools',    access?.allToolsUnlocked ? 'Unlocked ✅' : 'Plan-gated'],
+            ['All Tools',    access?.allAccess ? 'Unlocked ✅' : 'Plan-gated'],
           ].map(([k, v]) => (
             <div key={k} className="flex gap-2 text-xs">
               <span className="w-28 shrink-0 text-muted-foreground">{k}</span>
