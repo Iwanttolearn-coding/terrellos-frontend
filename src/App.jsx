@@ -93,6 +93,11 @@ import { SupabaseProvider } from '@/lib/SupabaseContext';
 import SupabaseAuth     from '@/pages/tools/SupabaseAuth';
 import SupabaseStatus   from '@/pages/tools/SupabaseStatus';
 
+// ── Coming Soon pages ────────────────────────────────────────────────────────
+import PrintReadiness     from '@/pages/tools/PrintReadiness';
+import StyleAdvisor       from '@/pages/tools/StyleAdvisor';
+import BackgroundSelector from '@/pages/tools/BackgroundSelector';
+
 // ── Placeholder for unbuilt routes ───────────────────────────────────────────
 const ComingSoon = ({ title }) => (
   <div className="min-h-[60vh] flex items-center justify-center p-8">
@@ -190,11 +195,11 @@ const AuthenticatedApp = () => {
 
         {/* ── AI Designer specific ─────────────────────────────────────────── */}
         <Route path="/tools/image-gen"           element={<ComingSoon title="AI Image Generator" />} />
-        <Route path="/tools/print-readiness"     element={<ComingSoon title="Print Readiness Analyzer" />} />
-        <Route path="/tools/style-advisor"       element={<ComingSoon title="Style Advisor" />} />
+        <Route path="/tools/print-readiness"     element={<PrintReadiness />} />
+        <Route path="/tools/style-advisor"       element={<StyleAdvisor />} />
         <Route path="/tools/gallery"             element={<ComingSoon title="Design Gallery" />} />
         <Route path="/tools/portrait-upload"     element={<ComingSoon title="Portrait Upload & Reference" />} />
-        <Route path="/tools/background-selector" element={<ComingSoon title="Background / Live Background" />} />
+        <Route path="/tools/background-selector" element={<BackgroundSelector />} />
         <Route path="/tools/saved-projects"      element={<ComingSoon title="Saved Projects" />} />
 
         {/* ── Admin ────────────────────────────────────────────────────────── */}
