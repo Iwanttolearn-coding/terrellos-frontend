@@ -1,3 +1,4 @@
+import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { getEffectiveAccess } from '@/lib/ownerConfig';
@@ -87,7 +88,7 @@ export default function AutomationEngine() {
   const [newWf, setNewWf] = useState({ name: '', trigger: 'schedule', action: 'send_notification', interval: '1 day' });
 
   useEffect(() => {
-    Promise.resolve(loadUser()).then(u => setAccess(getEffectiveAccess(u))).catch(() => {});
+    Promise.resolve(loadUser()).then(u => setAccess(resolveUserAccess(u))).catch(() => {});
   }, []);
 
   function toggleWf(id) {
