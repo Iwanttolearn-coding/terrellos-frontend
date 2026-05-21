@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { resolveUserAccess } from '@/lib/resolveUserAccess';
+import { resolveUserAccess , loadUser} from '@/lib/resolveUserAccess';
 import { ShieldCheck, User } from 'lucide-react';
 
 export default function TopBarIdentity() {
@@ -12,7 +12,7 @@ export default function TopBarIdentity() {
   const [initials, setInitials] = useState('');
 
   useEffect(() => {
-    base44.auth.me()
+    Promise.resolve(loadUser())
       .then(u => {
         setAccess(resolveUserAccess(u));
         if (u?.full_name) {
