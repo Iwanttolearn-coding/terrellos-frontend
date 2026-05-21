@@ -89,7 +89,7 @@ export default function AIModels() {
       const acc = getEffectiveAccess(u);
       setAccess(acc);
 
-      if (!acc.isSuperAdmin) { setLoading(false); return; }
+      if (!acc.founder) { setLoading(false); return; }
 
       const existing = await base44.entities.AIModelSetting.list('-created_date');
 
@@ -139,7 +139,7 @@ export default function AIModels() {
 
   if (!access) return null;
 
-  if (!access.isSuperAdmin) {
+  if (!access.founder) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[60vh]">
         <div className="card-glass rounded-2xl p-10 text-center max-w-md">
