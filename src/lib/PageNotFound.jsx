@@ -1,59 +1,30 @@
-import { useLocation } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+/**
+ * PageNotFound.jsx — TM Dezigns AI Designer
+ * Clean 404 page with navigation. No white screen.
+ */
+import { Link } from 'react-router-dom';
+import { Home, ArrowLeft } from 'lucide-react';
 
-
-export default function PageNotFound({}) {
-    const location = useLocation();
-    const pageName = location.pathname.substring(1);
-
-    const { data: authData, isFetched } = useQuery({
-        queryKey: ['user'],
-        queryFn: async () => {
-            try {
-                const user = await base44.auth.me();
-                return { user, isAuthenticated: true };
-            } catch (error) {
-                return { user: null, isAuthenticated: false };
-            }
-        }
-    });
-    
-    return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-            <div className="max-w-md w-full text-center space-y-6">
-                <div className="w-20 h-20 rounded-2xl gradient-purple-blue flex items-center justify-center mx-auto glow-purple">
-                    <span className="text-3xl font-bold text-white">404</span>
-                </div>
-                <div className="space-y-2">
-                    <h2 className="text-2xl font-bold text-foreground">Page Not Found</h2>
-                    <p className="text-sm text-muted-foreground">
-                        <span className="font-mono text-primary">/{pageName}</span> doesn't exist in this app.
-                    </p>
-                </div>
-                {isFetched && authData?.isAuthenticated && (authData?.user?.role === 'admin' || authData?.user?.role === 'super_admin') && (
-                    <div className="p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-left">
-                        <p className="text-xs font-bold text-yellow-400 mb-1">Admin Note</p>
-                        <p className="text-xs text-muted-foreground">
-                            This route isn't registered in <span className="font-mono">App.jsx</span>. Add it or navigate to an existing page.
-                        </p>
-                    </div>
-                )}
-                <div className="flex gap-3 justify-center">
-                    <button
-                        onClick={() => window.history.back()}
-                        className="px-4 py-2 text-sm font-medium text-muted-foreground bg-secondary rounded-lg hover:bg-secondary/80 transition-colors"
-                    >
-                        ← Go Back
-                    </button>
-                    <button
-                        onClick={() => window.location.href = '/'}
-                        className="px-4 py-2 text-sm font-medium text-white rounded-lg gradient-purple-blue hover:opacity-90 transition-opacity"
-                    >
-                        Go Home
-                    </button>
-                </div>
-            </div>
+export default function PageNotFound() {
+  return (
+    <div className="min-h-[70vh] flex items-center justify-center p-8">
+      <div className="text-center space-y-6">
+        <div className="text-8xl font-black text-gray-800">404</div>
+        <div>
+          <h1 className="text-2xl font-black text-white">Page Not Found</h1>
+          <p className="text-gray-500 text-sm mt-2">This route doesn't exist in TM Dezigns AI Designer.</p>
         </div>
-    )
+        <div className="flex items-center justify-center gap-3">
+          <button onClick={() => window.history.back()}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white text-sm transition-all">
+            <ArrowLeft className="w-4 h-4" /> Go Back
+          </button>
+          <Link to="/"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white text-sm font-bold hover:opacity-90 transition-opacity">
+            <Home className="w-4 h-4" /> Dashboard
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 }
