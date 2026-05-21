@@ -1,3 +1,4 @@
+import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { isOwner } from '@/lib/backendApi';
@@ -64,7 +65,7 @@ export default function SuperAdmin() {
 
   const load = async () => {
     const [me, ctrls] = await Promise.all([
-      base44.auth.me(),
+      Promise.resolve(loadUser()),
       base44.entities.OwnerControl.list(),
     ]);
     setUser(me);
