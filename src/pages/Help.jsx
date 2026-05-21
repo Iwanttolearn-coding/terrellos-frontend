@@ -8,7 +8,7 @@ const SECTIONS = [
     items: [
       'TerrellOS is your AI-powered operating system for managing all your apps.',
       'Use the Founder Command Center (/founder) to control tools and monitor system health.',
-      'All AI tools connect to the live backend at terrellos-backend.onrender.com.',
+      'All AI tools connect to the live backend at terrellos-backend.fly.dev.',
     ],
   },
   {
