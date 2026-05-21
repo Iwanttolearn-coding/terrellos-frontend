@@ -62,7 +62,7 @@ export default function CodeDiagnostics() {
   const [logsLoading, setLogsLoading] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(u => setUser(u)).catch(() => {});
+    Promise.resolve(loadUser()).then(u => setUser(u)).catch(() => {});
   }, []);
 
   useEffect(() => {
