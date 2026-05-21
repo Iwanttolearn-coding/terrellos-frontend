@@ -6,7 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 function detectEnv(url) {
   if (!url) return 'UNKNOWN';
-  if (url.includes('onrender.com')) return 'PRODUCTION';
+  if (url.includes('fly.dev')) return 'PRODUCTION';
   if (url.includes('localhost') || url.includes('127.0.0.1')) return 'LOCAL';
   return 'PREVIEW';
 }
