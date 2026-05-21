@@ -1,3 +1,4 @@
+import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { getEffectiveAccess } from '@/lib/ownerConfig';
@@ -40,7 +41,7 @@ export default function CostManager() {
   const [costs, setCosts] = useState(null);
 
   useEffect(() => {
-    Promise.resolve(loadUser()).then(u => setAccess(getEffectiveAccess(u))).catch(() => {});
+    Promise.resolve(loadUser()).then(u => setAccess(resolveUserAccess(u))).catch(() => {});
     loadData();
   }, []);
 
