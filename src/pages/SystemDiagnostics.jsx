@@ -1,3 +1,4 @@
+import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { pingBackend } from '@/lib/backendApi';
@@ -19,7 +20,7 @@ const CHECKS = [
     icon: Key,
     category: 'core',
     run: async () => {
-      const u = await base44.auth.me();
+      const u = await Promise.resolve(loadUser());
       if (!u) throw new Error('Not authenticated');
       return { msg: u.email };
     },
@@ -82,7 +83,7 @@ const CHECKS = [
     icon: Cloud,
     category: 'infra',
     run: async () => {
-      const r = await fetch('https://terrellos.vercel.app', { signal: AbortSignal.timeout(8000), mode: 'no-cors' });
+      const r = await fetch('https://app.tm-dezigns.com', { signal: AbortSignal.timeout(8000), mode: 'no-cors' });
       return { msg: 'Reachable' };
     },
   },
