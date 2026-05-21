@@ -1,47 +1,61 @@
 /**
- * RouteGuard — wraps routes that require a minimum role.
- * Usage: <RouteGuard role="super_admin"><AdminPage /></RouteGuard>
+ * RouteGuard.jsx — TM Dezigns AI Designer
+ * Uses AuthContext + resolveUserAccess ONLY. No Base44 SDK. No loops.
+ * Founder always passes every gate.
  */
-import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
-import { getEffectiveAccess, isOwnerEmail } from '@/lib/ownerConfig';
+import { useAuth } from '@/lib/AuthContext';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import { ShieldOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function RouteGuard({ children, role = 'user', plan = null }) {
-  const [access, setAccess] = useState(null);
+  const { user, isLoadingAuth } = useAuth();
 
-  useEffect(() => {
-    let cancelled = false;
-    base44.auth.me()
-      .then(u => { if (!cancelled) setAccess(getEffectiveAccess(u)); })
-      .catch(() => { if (!cancelled) setAccess(getEffectiveAccess(null)); });
-    return () => { cancelled = true; };
-  }, []);
-
-  if (access === null) {
+  // Still loading — show spinner, do NOT redirect
+  if (isLoadingAuth) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  const allowed = role === 'super_admin'
-    ? access.isSuperAdmin
-    : role === 'admin'
-      ? access.isSuperAdmin || access.effectiveRole === 'admin'
-      : true;
+  const access = resolveUserAccess(user);
+
+  // Founder bypasses every gate — no exceptions
+  if (access.founder) return children;
+
+  const allowed =
+    role === 'super_admin' ? access.role === 'super_admin' :
+    role === 'admin'       ? access.canViewAdmin :
+    role === 'member'      ? !!user :
+    true;
 
   if (!allowed) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
-        <div className="w-16 h-16 rounded-2xl bg-destructive/10 border border-destructive/30 flex items-center justify-center mb-4">
-          <ShieldOff className="w-8 h-8 text-destructive" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 gap-4">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+          <ShieldOff className="w-8 h-8 text-red-400" />
         </div>
-        <h2 className="text-xl font-bold text-foreground mb-2">Access Denied</h2>
-        <p className="text-sm text-muted-foreground mb-6">You don't have permission to view this page.</p>
-        <Link to="/" className="text-sm text-primary hover:underline">← Back to Dashboard</Link>
+        <h2 className="text-xl font-black text-white">Access Restricted</h2>
+        <p className="text-gray-400 text-sm max-w-sm">
+          {user ? "Your current plan doesn't include access to this area." : "Sign in to access this area."}
+        </p>
+        <div className="flex gap-3">
+          <Link to="/" className="px-4 py-2 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white text-sm transition-all">
+            Dashboard
+          </Link>
+          {!user && (
+            <Link to="/login" className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white text-sm font-bold hover:opacity-90 transition-opacity">
+              Sign In
+            </Link>
+          )}
+          {user && (
+            <Link to="/pricing" className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white text-sm font-bold hover:opacity-90 transition-opacity">
+              Upgrade
+            </Link>
+          )}
+        </div>
       </div>
     );
   }
