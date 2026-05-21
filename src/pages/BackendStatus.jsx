@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { healthCheck, BACKEND_BASE_URL } from '@/lib/terrellOS';
-import { resolveUserAccess } from '@/lib/resolveUserAccess';
+import { resolveUserAccess, loadUser} from '@/lib/resolveUserAccess';
 import { base44 } from '@/api/base44Client';
 import { Server, RefreshCw, CheckCircle, XCircle, Clock, ExternalLink, Wifi } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ export default function BackendStatus() {
   const [lastChecked, setLastChecked] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    Promise.resolve(loadUser()).then(setUser).catch(() => {});
     checkHealth();
   }, []);
 
