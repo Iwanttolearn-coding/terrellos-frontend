@@ -88,7 +88,7 @@ export default function TestRunner() {
   const [branch, setBranch] = useState('main');
 
   useEffect(() => {
-    base44.auth.me().then(u => setUser(u)).catch(() => {});
+    Promise.resolve(loadUser()).then(u => setUser(u)).catch(() => {});
     setLoading(false);
   }, []);
 
