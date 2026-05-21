@@ -12,12 +12,7 @@
  *      subscriptionStatus, displayName }
  *
  * Banned patterns (never use these again):
- *   ✗ base44.auth.me()
- *   ✗ getEffectiveAccess()
- *   ✗ isSuperAdmin
- *   ✗ allToolsUnlocked
- *   ✗ founderAccess resolver imports
- *   ✗ ownerConfig imports for access checks
+ *   Remove: base44.auth, getEffectiveAccess, isSuperAdmin, allToolsUnlocked, founderAccess, ownerConfig
  */
 
 export const FOUNDER_EMAILS = [
