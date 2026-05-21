@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
           if (parsed?.email) {
             // Apply founder override immediately — no async needed
             const resolved = isFounder(parsed.email)
-              ? { ...parsed, role: 'super_admin', plan: 'elite', all_tools_access: true }
+              ? { ...parsed, role: 'super_admin', plan: 'founder', all_tools_access: true, founder: true }
               : parsed;
             setUser(resolved);
             setIsLoadingAuth(false);
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
           if (res.ok) {
             const data = await res.json();
             const resolved = isFounder(data.email)
-              ? { ...data, role: 'super_admin', plan: 'elite', all_tools_access: true }
+              ? { ...data, role: 'super_admin', plan: 'founder', all_tools_access: true, founder: true }
               : data;
             setUser(resolved);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(resolved));
