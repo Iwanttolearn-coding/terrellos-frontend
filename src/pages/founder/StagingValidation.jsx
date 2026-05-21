@@ -82,7 +82,7 @@ export default function StagingValidation() {
   }, []);
 
   // Access gate
-  if (user !== null && !isFounderEmail(user?.email)) {
+  if (user !== null && !resolveUserAccess(user?.email).founder) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="card-glass rounded-2xl p-8 max-w-sm w-full text-center border border-destructive/30">
