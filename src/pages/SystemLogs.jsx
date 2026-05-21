@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { resolveUserAccess } from '@/lib/founderAccess';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import { getSystemLogs } from '@/lib/terrellOS';
 import { ScrollText, RefreshCw, ShieldCheck, CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
