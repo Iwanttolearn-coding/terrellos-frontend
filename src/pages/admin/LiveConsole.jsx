@@ -105,7 +105,7 @@ export default function LiveConsole() {
     URL.revokeObjectURL(url);
   }
 
-  if (access && !access.isSuperAdmin) {
+  if (access && !access.founder) {
     return (
       <div className="p-8 text-center text-muted-foreground">
         <ShieldCheck className="w-10 h-10 mx-auto mb-3 opacity-30" />
