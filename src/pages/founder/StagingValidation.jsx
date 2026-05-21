@@ -75,7 +75,7 @@ export default function StagingValidation() {
   const [stagingReport, setStagingReport] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(u => {
+    Promise.resolve(loadUser()).then(u => {
       setUser(u);
       setLoading(false);
     }).catch(() => setLoading(false));
