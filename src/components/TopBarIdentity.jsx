@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { resolveUserAccess } from '@/lib/founderAccess';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import { ShieldCheck, User } from 'lucide-react';
 
 export default function TopBarIdentity() {
@@ -29,7 +29,7 @@ export default function TopBarIdentity() {
 
   return (
     <div className="flex items-center gap-2 flex-shrink-0">
-      {access.isSuperAdmin ? (
+      {access.founder ? (
         <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/10 border border-primary/20">
           <ShieldCheck className="w-3 h-3 text-primary" />
           <span className="text-[10px] font-mono text-primary font-bold hidden sm:inline">SUPER ADMIN</span>
