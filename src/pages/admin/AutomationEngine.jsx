@@ -87,7 +87,7 @@ export default function AutomationEngine() {
   const [newWf, setNewWf] = useState({ name: '', trigger: 'schedule', action: 'send_notification', interval: '1 day' });
 
   useEffect(() => {
-    base44.auth.me().then(u => setAccess(getEffectiveAccess(u))).catch(() => {});
+    Promise.resolve(loadUser()).then(u => setAccess(getEffectiveAccess(u))).catch(() => {});
   }, []);
 
   function toggleWf(id) {
