@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { resolveUserAccess } from '@/lib/resolveUserAccess';
+import { resolveUserAccess, loadUser} from '@/lib/resolveUserAccess';
 import { getSystemLogs } from '@/lib/terrellOS';
 import { ScrollText, RefreshCw, ShieldCheck, CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,7 @@ export default function SystemLogs() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(u => {
+    Promise.resolve(loadUser()).then(u => {
       setUser(u);
       loadLogs();
     }).catch(() => setLoading(false));
