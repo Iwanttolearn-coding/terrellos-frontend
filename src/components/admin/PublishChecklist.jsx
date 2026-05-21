@@ -25,7 +25,7 @@ const CHECKS = [
     label: 'Founder resolves as SUPER ADMIN',
     run: async ({ user, access }) => {
       if (!user) return { pass: false, note: 'User not loaded.' };
-      const is = isOwnerEmail(user.email) && access?.isSuperAdmin;
+      const is = isOwnerEmail(user.email) && access?.founder;
       return { pass: is, note: is ? 'super_admin confirmed' : `Role: ${access?.effectiveRole || 'unknown'}` };
     },
   },
