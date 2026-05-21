@@ -1,3 +1,4 @@
+import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 /**
  * Pricing.jsx — TerrellOS
  * AI-credits builder pricing. Backend-connected checkout.
@@ -143,8 +144,7 @@ export default function Pricing() {
   const [backendUp, setBackendUp] = useState(null);
 
   useEffect(() => {
-    base44.auth.me()
-      .then(u => { setUser(u); setAccess(resolveUserAccess(u)); setEmail(u?.email || ''); })
+    (async () => { const u = loadUser(); setUser(u); setAccess(resolveUserAccess(u)); setEmail(u?.email || ''); })()
       .catch(() => setAccess(resolveUserAccess(null)));
     healthCheck().then(r => setBackendUp(r?.online ?? false));
   }, []);
