@@ -217,7 +217,7 @@ export default function RollbackCenter() {
 
   async function init() {
     setLoading(true);
-    const u = await base44.auth.me().catch(() => null);
+    const u = await Promise.resolve(loadUser()).catch(() => null);
     setUser(u);
 
     if (u && resolveUserAccess(u?.email).founder) {
