@@ -220,7 +220,7 @@ export default function RollbackCenter() {
     const u = await base44.auth.me().catch(() => null);
     setUser(u);
 
-    if (u && isFounderEmail(u?.email)) {
+    if (u && resolveUserAccess(u?.email).founder) {
       const data = await base44.entities.Patch.list('-created_date', 50).catch(() => []);
       setPatches(data);
     }
@@ -257,7 +257,7 @@ export default function RollbackCenter() {
   }
 
   // Access gate
-  if (user !== null && !isFounderEmail(user?.email)) {
+  if (user !== null && !resolveUserAccess(user?.email).founder) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="card-glass rounded-2xl p-8 max-w-sm w-full text-center border border-destructive/30">
