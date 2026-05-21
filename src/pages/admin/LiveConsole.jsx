@@ -1,3 +1,4 @@
+import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { pingBackend } from '@/lib/backendApi';
@@ -70,7 +71,7 @@ export default function LiveConsole() {
 
   useEffect(() => {
     Promise.resolve(loadUser())
-      .then(u => { setUser(u); setAccess(getEffectiveAccess(u)); })
+      .then(u => { setUser(u); setAccess(resolveUserAccess(u)); })
       .catch(() => {});
 
     async function loadInitial() {
