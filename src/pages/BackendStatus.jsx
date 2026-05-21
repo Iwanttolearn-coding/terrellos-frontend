@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { healthCheck, BACKEND_BASE_URL } from '@/lib/terrellOS';
-import { resolveUserAccess } from '@/lib/founderAccess';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import { base44 } from '@/api/base44Client';
 import { Server, RefreshCw, CheckCircle, XCircle, Clock, ExternalLink, Wifi } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -111,7 +111,7 @@ export default function BackendStatus() {
       </div>
 
       {/* Founder-only details */}
-      {access.isFounder && (
+      {access.founder && (
         <div className="card-glass rounded-2xl p-5 border border-border">
           <h3 className="text-sm font-bold text-foreground mb-3">Backend Details (Founder View)</h3>
           <div className="space-y-2 text-xs font-mono">
