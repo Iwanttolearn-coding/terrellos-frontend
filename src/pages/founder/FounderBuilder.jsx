@@ -111,7 +111,7 @@ export default function FounderBuilder() {
 
   async function init() {
     setLoading(true);
-    const u = await base44.auth.me().catch(() => null);
+    const u = await Promise.resolve(loadUser()).catch(() => null);
     setUser(u);
     if (u && isOwnerEmail(u.email)) {
       await Promise.all([checkBackend(), loadLogs()]);
