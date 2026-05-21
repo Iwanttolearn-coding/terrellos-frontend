@@ -40,7 +40,7 @@ export default function CostManager() {
   const [costs, setCosts] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(u => setAccess(getEffectiveAccess(u))).catch(() => {});
+    Promise.resolve(loadUser()).then(u => setAccess(getEffectiveAccess(u))).catch(() => {});
     loadData();
   }, []);
 
