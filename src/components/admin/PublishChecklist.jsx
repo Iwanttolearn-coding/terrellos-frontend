@@ -56,9 +56,9 @@ const CHECKS = [
   },
   {
     id: 'production_url',
-    label: 'Backend URL is production (onrender.com)',
+    label: 'Backend URL is production (fly.dev)',
     run: async () => {
-      const isProd = API_BASE_URL.includes('onrender.com');
+      const isProd = API_BASE_URL.includes('fly.dev');
       return { pass: isProd, note: API_BASE_URL };
     },
   },
