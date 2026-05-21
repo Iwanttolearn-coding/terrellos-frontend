@@ -1,24 +1,18 @@
 /**
- * founderAccess.js — TM Dezigns AI Designer
- * COMPATIBILITY SHIM — re-exports from resolveUserAccess.js
- * Do not add new logic here. This exists only for legacy import compatibility.
+ * founderAccess.js — DEPRECATED SHIM
+ * All exports forward to resolveUserAccess.js.
+ * Do not add logic here. Import from resolveUserAccess.js directly.
  */
 export {
   resolveUserAccess,
+  resolveUserAccess as getEffectiveAccess,
+  resolveUserAccess as getFounderAccess,
   isFounder,
   isFounder as isFounderEmail,
   isFounder as isOwnerEmail,
-  FOUNDER_EMAILS,
-  saveUser,
+  isFounder as normalizeEmail,
   loadUser,
+  saveUser,
   clearUser,
+  FOUNDER_EMAILS,
 } from '@/lib/resolveUserAccess';
-
-// Legacy alias
-export { isFounder as normalizeEmail } from '@/lib/resolveUserAccess';
-
-// getFounderAccess — legacy usage in some pages
-import { resolveUserAccess } from '@/lib/resolveUserAccess';
-export function getFounderAccess(user) {
-  return resolveUserAccess(user);
-}
