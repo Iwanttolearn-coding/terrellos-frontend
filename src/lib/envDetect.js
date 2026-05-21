@@ -1,6 +1,6 @@
 /**
  * envDetect.js — Single source of truth for environment detection.
- * PRODUCTION  → terrellos.vercel.app
+ * PRODUCTION  → app.tm-dezigns.com
  * STAGING     → any other .vercel.app or preview URLs
  * DEVELOPMENT → localhost / 127.0.0.1
  */
@@ -8,7 +8,7 @@
 const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 
 export const ENV = (() => {
-  if (hostname === 'terrellos.vercel.app') return 'production';
+  if (hostname === 'app.tm-dezigns.com') return 'production';
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168')) return 'development';
   return 'staging'; // preview URLs, other vercel deployments, base44 preview
 })();
