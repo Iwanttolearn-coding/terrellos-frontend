@@ -69,7 +69,7 @@ export default function LiveConsole() {
   }, [addEvent]);
 
   useEffect(() => {
-    base44.auth.me()
+    Promise.resolve(loadUser())
       .then(u => { setUser(u); setAccess(getEffectiveAccess(u)); })
       .catch(() => {});
 
