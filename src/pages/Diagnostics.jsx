@@ -1,3 +1,4 @@
+import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { testBackendConnection } from '@/lib/backendApi';
@@ -42,7 +43,7 @@ export default function Diagnostics() {
     let message = '';
 
     if (key === 'auth') {
-      const user = await base44.auth.me();
+      const user = await Promise.resolve(loadUser());
       if (user && user.email) {
         message = `Authenticated as ${user.email}`;
       } else {
