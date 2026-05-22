@@ -1,3 +1,4 @@
+import React from 'react';
 /**
  * App.jsx — TerrellOS
  * ONE app. ONE domain. ONE brand.
@@ -80,6 +81,18 @@ import CodeDiagnostics  from '@/pages/founder/CodeDiagnostics';
 import PatchCenter      from '@/pages/founder/PatchCenter';
 import DeploymentCenter from '@/pages/founder/DeploymentCenter';
 
+
+// ── TerrellOS /terrellos/* pages ─────────────────────────────────────────────
+import TerrellOSWelcome       from '@/pages/terrellos/TerrellOSWelcome';
+import TerrellOSDashboard     from '@/pages/terrellos/TerrellOSDashboard';
+import TerrellOSFounder       from '@/pages/terrellos/TerrellOSFounder';
+import TerrellOSTools         from '@/pages/terrellos/TerrellOSTools';
+import TerrellOSSystemStatus  from '@/pages/terrellos/TerrellOSSystemStatus';
+import TerrellOSUsers         from '@/pages/terrellos/TerrellOSUsers';
+import TerrellOSSubscriptions from '@/pages/terrellos/TerrellOSSubscriptions';
+import TerrellOSDeployments   from '@/pages/terrellos/TerrellOSDeployments';
+import TerrellOSSettings      from '@/pages/terrellos/TerrellOSSettings';
+
 // ── Coming Soon stub ──────────────────────────────────────────────────────────
 const ComingSoon = ({ title }) => (
   <div className="min-h-[60vh] flex items-center justify-center p-8">
@@ -94,7 +107,15 @@ const ComingSoon = ({ title }) => (
 
 // ── Auth shell ────────────────────────────────────────────────────────────────
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, access, authError } = useAuth();
+  const { isLoadingAuth, access, authError, user, isAuthenticated } = useAuth();
+
+  // Post-login: authenticated users hitting '/' go to /terrellos/welcome
+  React.useEffect(() => {
+    if (!isLoadingAuth && isAuthenticated && user && window.location.pathname === '/') {
+      window.history.replaceState(null, '', '/terrellos/welcome');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  }, [isLoadingAuth, isAuthenticated, user]);
 
   if (isLoadingAuth) {
     return (
@@ -203,6 +224,17 @@ const AuthenticatedApp = () => {
         <Route path="/founder/diagnostics"  element={<CodeDiagnostics />} />
         <Route path="/founder/patch"        element={<PatchCenter />} />
         <Route path="/founder/deploy"       element={<DeploymentCenter />} />
+
+        {/* ── /terrellos/* routes ────────────────────────────────────── */}
+        <Route path="/terrellos/welcome"       element={<TerrellOSWelcome />} />
+        <Route path="/terrellos/dashboard"     element={<TerrellOSDashboard />} />
+        <Route path="/terrellos/founder"       element={<TerrellOSFounder />} />
+        <Route path="/terrellos/tools"         element={<TerrellOSTools />} />
+        <Route path="/terrellos/system-status" element={<TerrellOSSystemStatus />} />
+        <Route path="/terrellos/users"         element={<TerrellOSUsers />} />
+        <Route path="/terrellos/subscriptions" element={<TerrellOSSubscriptions />} />
+        <Route path="/terrellos/deployments"   element={<TerrellOSDeployments />} />
+        <Route path="/terrellos/settings"      element={<TerrellOSSettings />} />
 
         {/* ── 404 ───────────────────────────────────────────────────────── */}
         <Route path="*" element={<PageNotFound />} />
