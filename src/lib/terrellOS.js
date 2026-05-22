@@ -52,10 +52,17 @@ export const healthCheck = () =>
     error: true
   }))
 
-export const sendChat = (message) =>
-  apiFetch('/chat', {
+export const sendChat = (message, opts = {}) =>
+  apiFetch('/v1/core/chat', {
     method: 'POST',
-    body: JSON.stringify({ message })
+    body: JSON.stringify({
+      message,
+      max_tokens:    opts.max_tokens    || 1500,
+      language:      opts.language      || 'en',
+      output_language: opts.outputLanguage || opts.language || 'en',
+      app_id:        'terrellos',
+      ...opts,
+    })
   })
 
 export const speakText = (payload) =>
