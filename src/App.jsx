@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster"
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { BootProvider } from '@/lib/BootProvider';
@@ -110,13 +110,7 @@ const ComingSoon = ({ title }) => (
 const AuthenticatedApp = () => {
   const { isLoadingAuth, access, authError, user, isAuthenticated } = useAuth();
 
-  // Post-login: authenticated users hitting '/' go to /terrellos/welcome
-  React.useEffect(() => {
-    if (!isLoadingAuth && isAuthenticated && user && window.location.pathname === '/') {
-      window.history.replaceState(null, '', '/terrellos/welcome');
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    }
-  }, [isLoadingAuth, isAuthenticated, user]);
+  // After boot: redirect / → /terrellos/welcome (handled in route tree below)
 
   if (isLoadingAuth) {
     return (
@@ -157,7 +151,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route element={<Layout />}>
         {/* ── Core ──────────────────────────────────────────────────────── */}
-        <Route path="/"               element={<Dashboard />} />
+        <Route path="/"               element={<Navigate to="/terrellos/welcome" replace />} />
         <Route path="/login"          element={<FounderLogin />} />
         <Route path="/settings"       element={<Settings />} />
         <Route path="/help"           element={<Help />} />
