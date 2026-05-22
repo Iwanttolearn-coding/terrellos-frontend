@@ -1,14 +1,16 @@
-import React from 'react'
+import { useNavigate } from 'react-router-dom';
 export default function LiveTranscribe() {
+  const navigate = useNavigate();
   return (
-    <div style={{maxWidth:700,margin:'60px auto',padding:'0 20px',textAlign:'center'}}>
-      <div style={{fontSize:64,marginBottom:16}}>🎙️</div>
-      <h1 style={{color:'#f9fafb',fontSize:32,fontWeight:800,marginBottom:8}}>Live Transcribe</h1>
-      <p style={{color:'#6b7280',fontSize:16,lineHeight:1.7,marginBottom:24}}>Record or upload a sermon — AI transcribes, summarizes, extracts scriptures, and builds sermon notes.</p>
-      <div style={{display:'inline-block',background:'linear-gradient(135deg,#7c3aed,#4f46e5)',
-        color:'#fff',borderRadius:10,padding:'12px 28px',fontSize:14,fontWeight:700}}>
-        🔨 Building Now — Check Back Soon
+    <div style={{ minHeight:'80vh', background:'#030007', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ textAlign:'center', padding:20 }}>
+        <div style={{ fontSize:40, marginBottom:12 }}>🎙️</div>
+        <p style={{ color:'white', fontWeight:700, margin:0 }}>Live Transcribe</p>
+        <p style={{ color:'#4b5563', fontSize:13, margin:'8px 0 0' }}>Live transcription is integrated in the Voice Lab.</p>
+        <button onClick={() => navigate('/tools/voice-lab')} style={{ marginTop:16, padding:'8px 20px', borderRadius:8, background:'rgba(124,58,237,0.15)', border:'1px solid rgba(124,58,237,0.3)', color:'#a78bfa', cursor:'pointer', fontSize:13 }}>
+          Open Voice Lab
+        </button>
       </div>
     </div>
-  )
+  );
 }
