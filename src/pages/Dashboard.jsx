@@ -1,171 +1,150 @@
 /**
- * Dashboard.jsx — TM Dezigns AI Designer
- * Command center. Real backend health. Founder-aware. No fake data.
+ * Dashboard.jsx — TerrellOS
+ * Real command center. Live backend health. TerrellOS branding.
+ * No fake data. No TM Dezigns AI Designer label.
  */
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import {
-  Image, Scissors, Upload, Printer, Palette, LayoutGrid,
-  Crown, Activity, RefreshCw, ChevronRight, Zap, Mic,
-  MessageSquare, Brain, Settings, Shield
+  Crown, Activity, RefreshCw, ChevronRight, Server,
+  Brain, Mic, Zap, Shield, Terminal, Rocket, BarChart2,
+  Wrench, Users, Code, Database, AlertCircle, CheckCircle
 } from 'lucide-react';
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
 
-// Primary tool grid — TM Designs AI Designer focused
 const TOOLS = [
-  { label: 'Generate Image',    to: '/tools/ai-tools-studio', icon: Image,     color: 'from-violet-600 to-purple-800',   desc: 'AI image & tattoo generation', emoji: '🎨' },
-  { label: 'Tattoo Studio',     to: '/tools/tattoo-studio',   icon: Scissors,  color: 'from-orange-600 to-amber-800',    desc: 'Custom tattoo patterns & styles', emoji: '💉' },
-  { label: 'Upload Design',     to: '/tools/creator-vault',   icon: Upload,    color: 'from-emerald-600 to-green-800',   desc: 'Upload & manage your artwork', emoji: '📁' },
-  { label: 'Print Readiness',   to: '/tools/print-readiness', icon: Printer,   color: 'from-cyan-600 to-blue-800',       desc: 'Check print quality & specs', emoji: '🖨️' },
-  { label: 'Style Advisor',     to: '/tools/style-advisor',   icon: Palette,   color: 'from-pink-600 to-rose-800',       desc: 'AI-powered design recommendations', emoji: '✨' },
-  { label: 'My Gallery',        to: '/tools/creator-vault',   icon: LayoutGrid,color: 'from-fuchsia-600 to-violet-800',  desc: 'Your saved designs & projects', emoji: '🖼️' },
-  { label: 'AI Chat',           to: '/tools/chat-engine',     icon: MessageSquare, color: 'from-sky-600 to-blue-800',    desc: 'GPT-4o design assistant', emoji: '💬' },
-  { label: 'Voice Lab',         to: '/tools/voice-lab',       icon: Mic,       color: 'from-indigo-600 to-violet-800',   desc: 'ElevenLabs TTS & voice tools', emoji: '🎤' },
+  { label:'AI Chat',        to:'/tools/chat-engine',      emoji:'💬', desc:'GPT-4o powered assistant'           },
+  { label:'Voice Lab',      to:'/tools/voice-lab',        emoji:'🎤', desc:'ElevenLabs TTS & voice tools'       },
+  { label:'AI Builder',     to:'/ai-builder',             emoji:'🤖', desc:'Build and deploy AI apps'           },
+  { label:'AI Studio',      to:'/tools/ai-tools-studio',  emoji:'🎨', desc:'Image generation & design AI'       },
+  { label:'Tattoo Studio',  to:'/tools/tattoo-studio',    emoji:'✏️', desc:'Custom tattoo art & stencils'       },
+  { label:'Creator Vault',  to:'/tools/creator-vault',    emoji:'🗄️', desc:'Manage your uploaded assets'        },
+  { label:'Workflow',       to:'/tools/workflow',         emoji:'⚡', desc:'Automate multi-step processes'      },
+  { label:'API Manager',    to:'/tools/api-manager',      emoji:'🔌', desc:'Connect and manage external APIs'   },
 ];
 
 const FOUNDER_TOOLS = [
-  { label: 'Founder Center',    to: '/founder',               icon: Crown,     color: 'from-amber-500 to-orange-700',    desc: 'System control & full audit' },
-  { label: 'Admin Panel',       to: '/admin',                 icon: Shield,    color: 'from-red-600 to-rose-800',         desc: 'User management & system ops' },
-  { label: 'Backend Status',    to: '/backend-status',        icon: Activity,  color: 'from-slate-600 to-gray-800',       desc: 'Live connectivity monitor' },
-  { label: 'System Settings',   to: '/settings',              icon: Settings,  color: 'from-zinc-600 to-gray-800',        desc: 'Environment & config' },
+  { label:'Founder Center',   to:'/founder',             emoji:'👑' },
+  { label:'Admin Panel',      to:'/admin',               emoji:'🛡️' },
+  { label:'Backend Status',   to:'/backend-status',      emoji:'⚡' },
+  { label:'System Logs',      to:'/system-logs',         emoji:'📋' },
+  { label:'Live Console',     to:'/admin/live-console',  emoji:'🖥️' },
+  { label:'Deployments',      to:'/deployment-dashboard',emoji:'🚀' },
 ];
 
+function HealthDot({ ok }) {
+  if (ok === null) return <div style={{ width:8, height:8, borderRadius:'50%', background:'#374151' }} />;
+  return <div style={{ width:8, height:8, borderRadius:'50%', background: ok ? '#4ade80' : '#f87171', boxShadow: ok ? '0 0 6px #4ade80' : '0 0 6px #f87171' }} />;
+}
+
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const access = resolveUserAccess(user);
   const [health, setHealth] = useState(null);
   const [checking, setChecking] = useState(true);
 
-  const checkHealth = async () => {
+  const checkHealth = useCallback(async () => {
     setChecking(true);
     try {
-      const res = await fetch(`${BACKEND}/health`, { signal: AbortSignal.timeout(8000) });
-      const data = await res.json();
-      setHealth(data);
+      const r = await fetch(`${BACKEND}/health`, {
+        headers: { 'X-App-ID':'terrellos' },
+        signal: AbortSignal.timeout(8000),
+      });
+      const d = await r.json().catch(() => ({}));
+      setHealth({ ok: r.ok, status: d?.status || (r.ok ? 'Online' : 'Error'), uptime: d?.uptime });
     } catch {
-      setHealth({ status: 'offline', success: false });
+      setHealth({ ok: false, status: 'Offline' });
+    } finally {
+      setChecking(false);
     }
-    setChecking(false);
-  };
+  }, []);
 
-  useEffect(() => { checkHealth(); }, []);
+  useEffect(() => { checkHealth(); }, [checkHealth]);
 
-  const online = health?.status === 'healthy' || health?.success;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const name = access.displayName || 'Designer';
 
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-8 pb-24">
+    <div style={{ minHeight:'100vh', background:'#030007', padding:'20px 16px 60px', position:'relative' }}>
+      {/* Ambient */}
+      <div style={{ position:'fixed', top:'10%', left:'50%', transform:'translateX(-50%)', width:500, height:200, background:'radial-gradient(ellipse, rgba(124,58,237,0.05) 0%, transparent 70%)', pointerEvents:'none', zIndex:0 }} />
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          {access.founder && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-full font-semibold flex items-center gap-1.5">
-                <Crown className="w-3 h-3" /> Founder · Super Admin · Unlimited Access
+      <div style={{ maxWidth:1100, margin:'0 auto', position:'relative', zIndex:1 }}>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28, flexWrap:'wrap', gap:10 }}>
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2 }}>
+              <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#7c3aed,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚡</div>
+              <p style={{ fontSize:10, color:'#4b5563', margin:0, fontWeight:700, letterSpacing:3, textTransform:'uppercase' }}>TerrellOS Dashboard</p>
+            </div>
+            <h1 style={{ fontSize:22, fontWeight:900, color:'white', margin:0 }}>
+              {greeting}{user ? `, ${access.displayName}` : ''}
+            </h1>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            {/* Backend health pill */}
+            <div style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 12px', background:'#0a0a0a', border:'1px solid #1a1a1a', borderRadius:20 }}>
+              <HealthDot ok={health?.ok ?? null} />
+              <span style={{ fontSize:11, color: health?.ok ? '#4ade80' : health === null ? '#6b7280' : '#f87171', fontWeight:600 }}>
+                {checking ? 'Checking…' : health?.status || 'Unknown'}
               </span>
+              <button onClick={checkHealth} style={{ background:'none', border:'none', cursor:'pointer', padding:0, display:'flex' }}>
+                <RefreshCw size={11} color="#374151" style={{ animation: checking ? 'spin 1s linear infinite' : 'none' }} />
+              </button>
             </div>
-          )}
-          <h1 className="text-3xl font-black text-white">{greeting}, {name} 👋</h1>
-          <p className="text-gray-400 text-sm mt-1">TM Dezigns AI Designer · {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}</p>
+            {access.isFounder && (
+              <div style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 12px', background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:20 }}>
+                <Crown size={11} color="#f59e0b" />
+                <span style={{ fontSize:10, color:'#f59e0b', fontWeight:700 }}>FOUNDER</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Backend health pill */}
-        <button onClick={checkHealth} disabled={checking}
-          className="flex items-center gap-2 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl px-4 py-2.5 transition-all">
-          <span className={`w-2 h-2 rounded-full ${checking ? 'bg-yellow-400 animate-pulse' : online ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-          <span className="text-xs font-medium text-white">
-            {checking ? 'Checking…' : online ? 'AI Engine Online' : 'AI Engine Offline'}
-          </span>
-          <RefreshCw className={`w-3 h-3 text-gray-500 ${checking ? 'animate-spin' : ''}`} />
-        </button>
-      </div>
-
-      {/* ── Health strip (when online) ──────────────────────────────────────── */}
-      {health && !checking && online && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: 'GPT-4o',      val: health.openai_configured,      icon: '🧠' },
-            { label: 'Voice',       val: health.elevenlabs_configured,   icon: '🎤' },
-            { label: 'Image Gen',   val: health.image_generation === 'ready', icon: '🎨' },
-            { label: 'Transcribe',  val: health.whisper_transcription === 'ready', icon: '📝' },
-          ].map(({ label, val, icon }) => (
-            <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex items-center gap-3">
-              <span className="text-lg">{icon}</span>
-              <div>
-                <p className="text-xs text-gray-500">{label}</p>
-                <p className={`text-xs font-bold ${val ? 'text-green-400' : 'text-red-400'}`}>
-                  {val ? 'Ready' : 'Not configured'}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Primary tool grid ───────────────────────────────────────────────── */}
-      <div>
-        <h2 className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-4">Creative Tools</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {TOOLS.map(({ label, to, icon: Icon, color, desc, emoji }) => (
-            <Link key={to + label} to={to}
-              className="group bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-2xl p-4 flex flex-col gap-3 transition-all hover:-translate-y-0.5 active:scale-95">
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shadow-lg flex-shrink-0`}>
-                <Icon className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="font-bold text-white text-sm group-hover:text-violet-300 transition-colors leading-tight">{label}</p>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed hidden sm:block">{desc}</p>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-gray-400 transition-colors self-end" />
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Founder tools (founder only) ─────────────────────────────────────── */}
-      {access.founder && (
-        <div>
-          <h2 className="text-xs text-amber-500/70 uppercase tracking-widest font-semibold mb-4 flex items-center gap-2">
-            <Crown className="w-3.5 h-3.5" /> Founder Command Center
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {FOUNDER_TOOLS.map(({ label, to, icon: Icon, color, desc }) => (
-              <Link key={to} to={to}
-                className="group bg-amber-500/5 border border-amber-500/20 hover:border-amber-500/40 rounded-2xl p-4 flex flex-col gap-3 transition-all hover:-translate-y-0.5 active:scale-95">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shadow-lg flex-shrink-0`}>
-                  <Icon className="w-5 h-5 text-white" />
+        {/* Tool Grid */}
+        <div style={{ marginBottom:24 }}>
+          <p style={{ fontSize:10, color:'#374151', fontWeight:700, textTransform:'uppercase', letterSpacing:3, marginBottom:12 }}>Tool Library</p>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:8 }}>
+            {TOOLS.map(tool => (
+              <button key={tool.to} onClick={() => navigate(tool.to)}
+                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(124,58,237,0.4)'; e.currentTarget.style.transform='translateY(-1px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor='#1a1a1a'; e.currentTarget.style.transform='none'; }}
+                style={{ textAlign:'left', background:'#0a0a0a', border:'1px solid #1a1a1a', borderRadius:12, padding:'12px 14px', display:'flex', alignItems:'center', gap:12, cursor:'pointer', transition:'all 0.15s' }}>
+                <span style={{ fontSize:20, flexShrink:0 }}>{tool.emoji}</span>
+                <div style={{ minWidth:0 }}>
+                  <p style={{ fontWeight:700, color:'white', fontSize:13, margin:0 }}>{tool.label}</p>
+                  <p style={{ fontSize:10, color:'#374151', margin:'2px 0 0', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{tool.desc}</p>
                 </div>
-                <div>
-                  <p className="font-bold text-amber-200 text-sm leading-tight">{label}</p>
-                  <p className="text-xs text-amber-400/50 mt-0.5 leading-relaxed hidden sm:block">{desc}</p>
-                </div>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
-      )}
 
-      {/* ── Access status (non-founder) ──────────────────────────────────────── */}
-      {!access.founder && !access.allAccess && (
-        <div className="bg-violet-500/5 border border-violet-500/20 rounded-2xl p-5 flex items-center justify-between gap-4">
-          <div>
-            <p className="font-bold text-white text-sm">Unlock all AI tools</p>
-            <p className="text-xs text-gray-400 mt-1">Upgrade to access tattoo generation, portrait AI, print readiness, and more.</p>
+        {/* Founder tools */}
+        {access.isFounder && (
+          <div style={{ background:'rgba(124,58,237,0.05)', border:'1px solid rgba(124,58,237,0.12)', borderRadius:14, padding:14 }}>
+            <p style={{ fontSize:10, color:'#4b5563', fontWeight:700, textTransform:'uppercase', letterSpacing:3, marginBottom:12 }}>Founder Admin</p>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(140px, 1fr))', gap:6 }}>
+              {FOUNDER_TOOLS.map(t => (
+                <button key={t.to} onClick={() => navigate(t.to)}
+                  style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'rgba(124,58,237,0.08)', border:'1px solid rgba(124,58,237,0.15)', borderRadius:9, cursor:'pointer' }}>
+                  <span style={{ fontSize:14 }}>{t.emoji}</span>
+                  <span style={{ fontSize:11, color:'#a78bfa', fontWeight:600 }}>{t.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-          <Link to="/pricing"
-            className="flex-shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 text-white text-sm font-bold hover:opacity-90 transition-opacity">
-            Upgrade
-          </Link>
-        </div>
-      )}
+        )}
 
-      <p className="text-center text-xs text-gray-700">TM Dezigns AI Designer · Powered by TerrellOS AI Engine</p>
+        <p style={{ textAlign:'center', fontSize:11, color:'#111', marginTop:28 }}>
+          TerrellOS v2.0 · terrellos-backend.fly.dev · app.tm-dezigns.com
+        </p>
+      </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }
