@@ -1,242 +1,118 @@
+/**
+ * MemoryVault.jsx — TerrellOS
+ * Route: /tools/memory-vault
+ * AI memory sessions via /v1/memory/* backend routes.
+ */
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { Brain, Plus, Loader2, Heart, Sparkles, Clock, Tag, Trash2, CalendarDays } from 'lucide-react';
-import { companionRespond, startMemorySession, saveMemoryTranscript, endMemorySession } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
-import { notify } from '@/components/NotificationCenter';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
+import { Brain, Plus, ArrowLeft, RefreshCw, Clock, Trash2 } from 'lucide-react';
 
-const EMOTION_COLORS = {
-  joy:     'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
-  love:    'bg-pink-500/15 text-pink-300 border-pink-500/30',
-  grief:   'bg-blue-500/15 text-blue-300 border-blue-500/30',
-  peace:   'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-  faith:   'bg-primary/15 text-primary border-primary/30',
-  gratitude:'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  pain:    'bg-destructive/15 text-destructive border-destructive/30',
-};
+const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
+const APP_ID  = 'terrellos';
 
-function emotionStyle(e) {
-  return EMOTION_COLORS[e?.toLowerCase()] || 'bg-secondary text-muted-foreground border-border';
-}
-
-function groupByDate(memories) {
-  const groups = {};
-  memories.forEach(m => {
-    const d = new Date(m.created_date);
-    let label = format(d, 'MMMM d, yyyy');
-    if (isToday(d)) label = 'Today';
-    else if (isYesterday(d)) label = 'Yesterday';
-    if (!groups[label]) groups[label] = [];
-    groups[label].push(m);
+async function apiFetch(path, opts = {}) {
+  const r = await fetch(`${BACKEND}${path}`, {
+    ...opts,
+    headers: { 'Content-Type':'application/json', 'X-App-ID':APP_ID, ...(opts.headers||{}) },
+    signal: opts.signal || AbortSignal.timeout(15000),
   });
-  return groups;
-}
-
-function parseMeta(desc) {
-  try { return JSON.parse(desc || '{}'); } catch { return {}; }
+  if (!r.ok) { const t = await r.text(); throw new Error(`${r.status}: ${t.slice(0,80)}`); }
+  return r.json();
 }
 
 export default function MemoryVault() {
-  const [memories, setMemories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [reflecting, setReflecting] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [reflection, setReflection] = useState('');
-  const [form, setForm] = useState({ title: '', story: '', emotion: '', tags: '' });
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [profile,  setProfile]  = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState('');
+  const [newNote,  setNewNote]  = useState('');
+  const [saving,   setSaving]   = useState(false);
+
+  const userId = user?.email || user?.id || 'terrellos_user';
 
   useEffect(() => {
-    base44.entities.Upload.filter({ file_type: 'other' }, '-created_date', 50)
-      .then(data => {
-        setMemories(data.filter(r => { const m = parseMeta(r.description); return m.type === 'memory' || m.story || !m.type; }));
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    const load = async () => {
+      setLoading(true);
+      try {
+        const p = await apiFetch(`/v1/memory/profile/${encodeURIComponent(userId)}`);
+        setProfile(p.profile || p);
+      } catch { setProfile(null); }
+      setLoading(false);
+    };
+    load();
+  }, [userId]);
 
-  async function handleSave(e) {
-    e.preventDefault();
-    if (!form.title.trim()) return;
+  const saveNote = async () => {
+    if (!newNote.trim()) return;
     setSaving(true);
     try {
-      const record = await base44.entities.Upload.create({
-        file_name: form.title,
-        file_url: '',
-        file_type: 'other',
-        description: JSON.stringify({ type: 'memory', story: form.story, emotion: form.emotion, tags: form.tags }),
+      await apiFetch('/v1/memory/session/transcript', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId, content: newNote, source: 'manual_note', app_id: APP_ID }),
       });
-      setMemories(prev => [record, ...prev]);
-      setForm({ title: '', story: '', emotion: '', tags: '' });
-      setShowForm(false);
-      notify.success('Memory preserved!');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleDelete(id) {
-    await base44.entities.Upload.delete(id);
-    setMemories(prev => prev.filter(m => m.id !== id));
-    notify.info('Memory removed.');
-  }
-
-  async function generateReflection() {
-    if (memories.length === 0) return;
-    setReflecting(true);
-    const recent = memories.slice(0, 5).map(m => {
-      const meta = parseMeta(m.description);
-      return `"${m.file_name}": ${meta.story || ''}`;
-    }).join('\n');
-    try {
-      const res = await companionRespond(
-        `Based on these personal memories, write a short, warm, spiritually encouraging reflection (3-4 sentences):\n${recent}`
-      );
-      setReflection(res?.reply || res?.message || 'Reflection unavailable — check backend connection.');
-      notify.success('AI reflection generated via Eternal Echo ✓');
-    } catch (err) {
-      notify.error('Reflection failed: ' + err.message);
-    } finally {
-      setReflecting(false);
-    }
-  }
-
-  const groups = groupByDate(memories);
+      setNewNote('');
+    } catch (e) { setError(e.message); }
+    setSaving(false);
+  };
 
   return (
-    <div className="p-4 lg:p-8 max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-600 to-orange-800 flex items-center justify-center flex-shrink-0">
-            <Brain className="w-5 h-5 text-white" />
-          </div>
+    <div style={{ minHeight:'100vh', background:'#030007', padding:'20px 16px 60px' }}>
+      <div style={{ maxWidth:680, margin:'0 auto' }}>
+        <button onClick={() => navigate(-1)} style={{ fontSize:12, color:'#4b5563', background:'none', border:'none', cursor:'pointer', marginBottom:20, padding:0 }}>
+          <ArrowLeft size={13} style={{ verticalAlign:'middle', marginRight:4 }} />Back
+        </button>
+
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:24 }}>
+          <div style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#6366f1,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>🧠</div>
           <div>
-            <h1 className="text-xl font-bold gradient-text">Memory Vault</h1>
-            <div className="text-xs text-muted-foreground">{memories.length} memories · Eternal Echo</div>
+            <h1 style={{ fontSize:18, fontWeight:900, color:'white', margin:0 }}>Memory Vault</h1>
+            <p style={{ fontSize:11, color:'#4b5563', margin:0 }}>AI session memory and personal notes</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={generateReflection} disabled={reflecting || memories.length === 0}>
-            {reflecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1" />}
-            Reflect
-          </Button>
-          <Button size="sm" onClick={() => setShowForm(v => !v)}>
-            <Plus className="w-3.5 h-3.5 mr-1" /> Add
-          </Button>
-        </div>
-      </div>
 
-      {/* AI Reflection card */}
-      {reflection && (
-        <div className="card-glass rounded-2xl p-4 mb-5 border border-primary/20">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">AI Reflection</span>
-          </div>
-          <p className="text-sm text-foreground leading-relaxed italic">{reflection}</p>
-        </div>
-      )}
-
-      {/* Add memory form */}
-      {showForm && (
-        <form onSubmit={handleSave} className="card-glass rounded-2xl p-5 mb-5 space-y-3">
-          <Input placeholder="Memory title…" value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} />
-          <Textarea placeholder="Tell the story…" value={form.story} onChange={e => setForm(p => ({...p, story: e.target.value}))} rows={4} />
-          <div className="grid grid-cols-2 gap-3">
-            <Input placeholder="Emotion (joy, grief, love…)" value={form.emotion} onChange={e => setForm(p => ({...p, emotion: e.target.value}))} />
-            <Input placeholder="Tags (comma separated)" value={form.tags} onChange={e => setForm(p => ({...p, tags: e.target.value}))} />
-          </div>
-          {/* Emotion quick-select */}
-          <div className="flex flex-wrap gap-1.5">
-            {Object.keys(EMOTION_COLORS).map(em => (
-              <button key={em} type="button" onClick={() => setForm(p => ({...p, emotion: em}))}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${form.emotion === em ? emotionStyle(em) : 'border-border text-muted-foreground hover:border-border/60'}`}>
-                {em}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit" disabled={saving || !form.title.trim()} className="flex-1">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {saving ? 'Saving…' : 'Save Memory'}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-          </div>
-        </form>
-      )}
-
-      {/* Timeline */}
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-      ) : memories.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <Heart className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <div className="text-sm">No memories preserved yet.</div>
-          <Button className="mt-4" size="sm" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 mr-1" /> Add First Memory</Button>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {Object.entries(groups).map(([dateLabel, group]) => (
-            <div key={dateLabel}>
-              {/* Date divider */}
-              <div className="flex items-center gap-3 mb-3">
-                <CalendarDays className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">{dateLabel}</span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-
-              <div className="space-y-3">
-                {group.map(m => {
-                  const meta = parseMeta(m.description);
-                  const tags = meta.tags ? meta.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-                  return (
-                    <div key={m.id} className="card-glass rounded-2xl p-4 group">
-                      <div className="flex items-start justify-between gap-3 mb-1.5">
-                        <span className="font-semibold text-foreground leading-tight">{m.file_name}</span>
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          {meta.emotion && (
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold uppercase tracking-wide ${emotionStyle(meta.emotion)}`}>
-                              {meta.emotion}
-                            </span>
-                          )}
-                          <button
-                            onClick={() => handleDelete(m.id)}
-                            className="opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {meta.story && <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{meta.story}</p>}
-
-                      {tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {tags.map(tag => (
-                            <span key={tag} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-                              <Tag className="w-2.5 h-2.5" />{tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-1.5 mt-2">
-                        <Clock className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-[10px] text-muted-foreground">
-                          {m.created_date ? formatDistanceToNow(new Date(m.created_date), { addSuffix: true }) : ''}
-                        </span>
-                      </div>
+        {loading ? (
+          <p style={{ color:'#374151', fontSize:13, textAlign:'center', padding:'32px 0' }}>Loading memory profile…</p>
+        ) : (
+          <>
+            {/* Profile card */}
+            <div style={{ background:'#0a0a0a', border:'1px solid #1a1a1a', borderRadius:14, padding:14, marginBottom:16 }}>
+              <p style={{ fontSize:11, color:'#4b5563', fontWeight:700, textTransform:'uppercase', letterSpacing:2, margin:'0 0 8px' }}>Memory Profile</p>
+              {profile ? (
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                  {[
+                    ['User', userId],
+                    ['Sessions', profile.session_count || 0],
+                    ['Completion', `${profile.completion_pct || 0}%`],
+                    ['Status', profile.status || 'active'],
+                  ].map(([label, val]) => (
+                    <div key={label} style={{ background:'#111', borderRadius:8, padding:'8px 10px' }}>
+                      <p style={{ fontSize:10, color:'#374151', margin:0, textTransform:'uppercase', letterSpacing:1 }}>{label}</p>
+                      <p style={{ fontSize:13, fontWeight:700, color:'#9ca3af', margin:'2px 0 0' }}>{String(val)}</p>
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize:12, color:'#374151', margin:0 }}>No memory profile yet. Add a note below to create one.</p>
+              )}
             </div>
-          ))}
-        </div>
-      )}
+
+            {/* Add note */}
+            <div style={{ background:'#0a0a0a', border:'1px solid #1a1a1a', borderRadius:14, padding:14, marginBottom:16 }}>
+              <p style={{ fontSize:11, color:'#4b5563', fontWeight:700, textTransform:'uppercase', letterSpacing:2, margin:'0 0 10px' }}>Add Memory Note</p>
+              <textarea value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Record a thought, context, or memory…" rows={3}
+                style={{ width:'100%', background:'#111', border:'1px solid #1f2937', borderRadius:8, padding:'10px 12px', fontSize:13, color:'white', resize:'none', outline:'none', lineHeight:1.6, boxSizing:'border-box' }} />
+              {error && <p style={{ fontSize:11, color:'#f87171', margin:'6px 0 0' }}>{error}</p>}
+              <button onClick={saveNote} disabled={saving || !newNote.trim()}
+                style={{ marginTop:8, padding:'8px 18px', borderRadius:8, fontSize:12, fontWeight:700, border:'none', background: saving || !newNote.trim() ? '#111' : 'linear-gradient(135deg,#6366f1,#4f46e5)', color: saving || !newNote.trim() ? '#374151' : 'white', cursor: saving || !newNote.trim() ? 'not-allowed' : 'pointer' }}>
+                {saving ? 'Saving…' : 'Save Note'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
