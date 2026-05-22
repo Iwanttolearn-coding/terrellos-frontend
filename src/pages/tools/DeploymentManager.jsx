@@ -1,223 +1,181 @@
-import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import {
-  Rocket, CheckCircle, XCircle, Loader2, ExternalLink,
-  Globe, Zap, Copy, RefreshCw
-} from 'lucide-react';
-import { notify } from '@/components/NotificationCenter';
-import { safeInvoke, api, sendChat } from '@/lib/apiClient';
+/**
+ * DeploymentManager.jsx — TerrellOS
+ * Route: /tools/deploy
+ * Real deployment status for TerrellOS infrastructure.
+ * No Vercel. No Railway. Fly.io + Cloudflare only.
+ */
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Rocket, RefreshCw, CheckCircle, XCircle, AlertCircle, ExternalLink, Activity } from 'lucide-react';
 
-const PLATFORMS = [
+const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
+
+const DEPLOYMENTS = [
   {
-    id: 'vercel',
-    name: 'Vercel',
-    description: 'Zero-config deployments. Global CDN.',
-    color: 'border-white/20 hover:border-white/50',
-    activeColor: 'border-white bg-white/10',
-    dot: 'bg-white',
-    secretKey: 'VERCEL_TOKEN',
+    id: 'fly_backend',
+    label: 'TerrellOS Backend',
+    platform: 'Fly.io',
+    url: 'https://terrellos-backend.fly.dev',
+    healthEndpoint: '/health',
+    emoji: '⚡',
+    color: '#8b5cf6',
   },
   {
-    id: 'netlify',
-    name: 'Netlify',
-    description: 'Instant deploys. Built-in CI/CD.',
-    color: 'border-teal-500/30 hover:border-teal-400/60',
-    activeColor: 'border-teal-400 bg-teal-400/10',
-    dot: 'bg-teal-400',
-    secretKey: 'NETLIFY_TOKEN',
+    id: 'cf_frontend',
+    label: 'TerrellOS Frontend',
+    platform: 'Cloudflare Pages',
+    url: 'https://app.tm-dezigns.com',
+    healthEndpoint: null,
+    emoji: '🌐',
+    color: '#f97316',
+  },
+  {
+    id: 'fly_backend_health',
+    label: 'AI Engine (gpt-4o)',
+    platform: 'OpenAI via Fly.io',
+    url: `${BACKEND}/v1/core/chat`,
+    healthEndpoint: null,
+    emoji: '🤖',
+    color: '#10b981',
   },
 ];
 
-const STATUS_MAP = {
-  READY: { icon: CheckCircle, color: 'text-emerald-400', label: 'Live' },
-  ready: { icon: CheckCircle, color: 'text-emerald-400', label: 'Live' },
-  BUILDING: { icon: Loader2, color: 'text-yellow-400', label: 'Building', spin: true },
-  building: { icon: Loader2, color: 'text-yellow-400', label: 'Building', spin: true },
-  processing: { icon: Loader2, color: 'text-yellow-400', label: 'Processing', spin: true },
-  ERROR: { icon: XCircle, color: 'text-destructive', label: 'Error' },
-  error: { icon: XCircle, color: 'text-destructive', label: 'Error' },
-};
-
-function DeployResult({ result }) {
-  const s = STATUS_MAP[result.status] || STATUS_MAP['BUILDING'];
-  const Icon = s.icon;
-
-  function copy() {
-    navigator.clipboard.writeText(result.url);
-    notify.success('URL copied!');
-  }
+function DeployCard({ dep, status, onCheck }) {
+  const s = status || { state: 'idle' };
+  const stateColor = { idle:'#4b5563', checking:'#7c3aed', online:'#4ade80', offline:'#f87171', degraded:'#fbbf24' }[s.state] || '#4b5563';
 
   return (
-    <div className="card-glass rounded-2xl p-5 mt-4 border border-emerald-500/20">
-      <div className="flex items-center gap-2 mb-3">
-        <Icon className={`w-4 h-4 ${s.color} ${s.spin ? 'animate-spin' : ''}`} />
-        <span className={`text-sm font-semibold ${s.color}`}>{s.label}</span>
-        <span className="text-xs text-muted-foreground ml-auto font-mono">{result.platform?.toUpperCase()}</span>
+    <div style={{ background:'#0a0a0a', border:`1px solid ${s.state === 'online' ? 'rgba(74,222,128,0.2)' : s.state === 'offline' ? 'rgba(248,113,113,0.2)' : '#1a1a1a'}`, borderRadius:14, padding:16, transition:'border-color 0.3s' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <span style={{ fontSize:22 }}>{dep.emoji}</span>
+          <div>
+            <p style={{ fontSize:13, fontWeight:700, color:'white', margin:0 }}>{dep.label}</p>
+            <p style={{ fontSize:11, color:'#4b5563', margin:0 }}>{dep.platform}</p>
+          </div>
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ width:7, height:7, borderRadius:'50%', background:stateColor, display:'inline-block', boxShadow: s.state === 'online' ? `0 0 8px ${stateColor}` : 'none' }} />
+          <span style={{ fontSize:11, color:stateColor, fontWeight:700, textTransform:'uppercase' }}>{s.state === 'idle' ? 'Not checked' : s.state}</span>
+        </div>
       </div>
-      <div className="flex items-center gap-2 bg-secondary/40 rounded-xl px-3 py-2.5">
-        <Globe className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-        <span className="text-xs font-mono text-foreground flex-1 truncate">{result.url}</span>
-        <button onClick={copy} className="text-muted-foreground hover:text-foreground transition-colors ml-1">
-          <Copy className="w-3.5 h-3.5" />
+
+      <p style={{ fontSize:11, color:'#374151', margin:'0 0 10px', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+        {dep.url}
+      </p>
+
+      {s.detail && (
+        <p style={{ fontSize:11, color: s.state === 'offline' ? '#f87171' : '#6b7280', margin:'0 0 10px' }}>{s.detail}</p>
+      )}
+
+      <div style={{ display:'flex', gap:6 }}>
+        <button onClick={() => onCheck(dep)}
+          style={{ flex:1, padding:'7px', borderRadius:8, fontSize:11, fontWeight:700, background:'rgba(124,58,237,0.1)', border:'1px solid rgba(124,58,237,0.25)', color:'#a78bfa', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
+          {s.state === 'checking' ? <><div style={{ width:12, height:12, border:'2px solid rgba(167,139,250,0.3)', borderTop:'2px solid #a78bfa', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} /> Checking…</> : <><Activity size={12}/> Check Status</>}
         </button>
-        <a href={result.url} target="_blank" rel="noopener noreferrer"
-          className="text-muted-foreground hover:text-primary transition-colors">
-          <ExternalLink className="w-3.5 h-3.5" />
+        <a href={dep.url} target="_blank" rel="noopener noreferrer"
+          style={{ padding:'7px 10px', borderRadius:8, fontSize:11, fontWeight:700, background:'#111', border:'1px solid #1f1f1f', color:'#4b5563', textDecoration:'none', display:'flex', alignItems:'center', gap:4 }}>
+          <ExternalLink size={11}/> Open
         </a>
       </div>
-      {result.deploymentId && (
-        <div className="mt-2 text-[10px] font-mono text-muted-foreground">
-          ID: {result.deploymentId}
-        </div>
-      )}
     </div>
   );
 }
 
 export default function DeploymentManager() {
-  const [platform, setPlatform] = useState('vercel');
-  const [projectName, setProjectName] = useState('');
-  const [html, setHtml] = useState('');
-  const [css, setCss] = useState('');
-  const [js, setJs] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const [statuses, setStatuses] = useState({});
+  const [checkingAll, setCheckingAll] = useState(false);
 
-  async function deploy() {
-    if (!html.trim()) { notify.warn('HTML is required to deploy'); return; }
-    setLoading(true);
-    setResult(null);
-    setError(null);
+  const checkDep = useCallback(async (dep) => {
+    setStatuses(s => ({ ...s, [dep.id]: { state: 'checking' } }));
     try {
-      const res = await safeInvoke('deployProject', {
-        platform,
-        html,
-        css,
-        js,
-        projectName: projectName || 'TerrellOS App',
+      let url = dep.url;
+      let method = 'GET';
+      let body = undefined;
+      if (dep.id === 'fly_backend_health') {
+        url = `${BACKEND}/v1/core/chat`;
+        method = 'POST';
+        body = JSON.stringify({ message: 'ping', max_tokens: 3 });
+      }
+      const start = Date.now();
+      const r = await fetch(url, {
+        method,
+        headers: { 'Content-Type':'application/json', 'X-App-ID':'terrellos' },
+        body,
+        signal: AbortSignal.timeout(10000),
+        mode: dep.id === 'cf_frontend' ? 'no-cors' : 'cors',
       });
-      setResult(res.data);
-      notify.success(`Deployed to ${platform}!`);
+      const ms = Date.now() - start;
+      const state = dep.id === 'cf_frontend' ? 'online' : (r.ok ? (ms > 5000 ? 'degraded' : 'online') : 'offline');
+      setStatuses(s => ({ ...s, [dep.id]: { state, detail: `${ms}ms response`, ms } }));
     } catch (e) {
-      const msg = e?.response?.data?.error || e.message || 'Deploy failed';
-      setError(msg);
-      notify.error(msg);
-    } finally {
-      setLoading(false);
+      setStatuses(s => ({ ...s, [dep.id]: { state: 'offline', detail: e.message?.slice(0,60) || 'Unreachable' } }));
     }
-  }
+  }, []);
+
+  const checkAll = useCallback(async () => {
+    setCheckingAll(true);
+    await Promise.all(DEPLOYMENTS.map(dep => checkDep(dep)));
+    setCheckingAll(false);
+  }, [checkDep]);
+
+  useEffect(() => { checkAll(); }, [checkAll]);
+
+  const onlineCount = Object.values(statuses).filter(s => s.state === 'online').length;
 
   return (
-    <div className="p-4 lg:p-8 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl gradient-purple-blue flex items-center justify-center glow-purple flex-shrink-0">
-          <Rocket className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold gradient-text">Deployment Manager</h1>
-          <p className="text-xs text-muted-foreground">Push generated code live to Vercel or Netlify instantly</p>
-        </div>
-      </div>
+    <div style={{ minHeight:'100vh', background:'#030007', padding:'20px 16px 60px' }}>
+      <div style={{ maxWidth:700, margin:'0 auto' }}>
+        <button onClick={() => navigate(-1)} style={{ fontSize:12, color:'#4b5563', background:'none', border:'none', cursor:'pointer', marginBottom:20, padding:0 }}>← Back</button>
 
-      {/* Platform Selector */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {PLATFORMS.map(p => (
-          <button
-            key={p.id}
-            onClick={() => setPlatform(p.id)}
-            className={`rounded-xl border p-4 text-left transition-all ${platform === p.id ? p.activeColor : p.color} card-glass`}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <div className={`w-2 h-2 rounded-full ${p.dot}`} />
-              <span className="text-sm font-semibold text-foreground">{p.name}</span>
-              {platform === p.id && <Zap className="w-3 h-3 text-primary ml-auto" />}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24, flexWrap:'wrap', gap:10 }}>
+          <div>
+            <h1 style={{ fontSize:22, fontWeight:900, color:'white', margin:0 }}>Deployment Health</h1>
+            <p style={{ fontSize:12, color:'#4b5563', margin:'2px 0 0' }}>TerrellOS · Fly.io + Cloudflare Pages</p>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ padding:'4px 14px', borderRadius:20, background: onlineCount === DEPLOYMENTS.length ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)', border:`1px solid ${onlineCount === DEPLOYMENTS.length ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.3)'}` }}>
+              <span style={{ fontSize:11, color: onlineCount === DEPLOYMENTS.length ? '#4ade80' : '#f87171', fontWeight:700 }}>
+                {onlineCount}/{DEPLOYMENTS.length} Online
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground">{p.description}</p>
-            <p className="text-[10px] font-mono text-muted-foreground/50 mt-1">Requires: {p.secretKey}</p>
-          </button>
-        ))}
-      </div>
-
-      {/* Project Name */}
-      <div className="mb-4">
-        <label className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-1.5 block">Project Name</label>
-        <Input
-          placeholder="my-terrellos-app"
-          value={projectName}
-          onChange={e => setProjectName(e.target.value)}
-          className="bg-secondary/40 border-border font-mono text-sm"
-        />
-      </div>
-
-      {/* Code Inputs */}
-      <div className="space-y-4 mb-6">
-        <div>
-          <label className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-1.5 block">
-            HTML <span className="text-destructive">*</span>
-          </label>
-          <Textarea
-            placeholder="<div>Your generated HTML here...</div>"
-            value={html}
-            onChange={e => setHtml(e.target.value)}
-            className="bg-secondary/40 border-border font-mono text-xs min-h-[140px] resize-y"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-1.5 block">CSS</label>
-            <Textarea
-              placeholder="body { ... }"
-              value={css}
-              onChange={e => setCss(e.target.value)}
-              className="bg-secondary/40 border-border font-mono text-xs min-h-[100px] resize-y"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-1.5 block">JavaScript</label>
-            <Textarea
-              placeholder="console.log('live');"
-              value={js}
-              onChange={e => setJs(e.target.value)}
-              className="bg-secondary/40 border-border font-mono text-xs min-h-[100px] resize-y"
-            />
+            <button onClick={checkAll} disabled={checkingAll}
+              style={{ display:'flex', alignItems:'center', gap:5, padding:'8px 14px', borderRadius:9, background:'rgba(124,58,237,0.12)', border:'1px solid rgba(124,58,237,0.25)', color:'#a78bfa', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+              <RefreshCw size={12} style={{ animation: checkingAll ? 'spin 1s linear infinite' : 'none' }} />
+              Refresh All
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Deploy Button */}
-      <Button
-        onClick={deploy}
-        disabled={loading}
-        className="w-full gradient-purple-blue text-white font-semibold h-11 glow-purple"
-      >
-        {loading
-          ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Deploying…</>
-          : <><Rocket className="w-4 h-4 mr-2" />Deploy to {PLATFORMS.find(p => p.id === platform)?.name}</>
-        }
-      </Button>
-
-      {/* Error */}
-      {error && (
-        <div className="mt-4 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-sm text-destructive flex gap-2">
-          <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>{error}</span>
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {DEPLOYMENTS.map(dep => (
+            <DeployCard key={dep.id} dep={dep} status={statuses[dep.id]} onCheck={checkDep} />
+          ))}
         </div>
-      )}
 
-      {/* Result */}
-      {result && <DeployResult result={result} />}
-
-      {/* Info banner */}
-      <div className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
-        <div className="font-semibold text-primary mb-1 font-mono">HOW TO CONNECT</div>
-        <p>Add <span className="font-mono text-foreground">VERCEL_TOKEN</span> or <span className="font-mono text-foreground">NETLIFY_TOKEN</span> in Settings → Secrets to enable live deployments.</p>
-        <p className="mt-1">Get tokens at <span className="font-mono text-accent">vercel.com/account/tokens</span> or <span className="font-mono text-accent">app.netlify.com/user/applications</span>.</p>
+        {/* Infrastructure reference */}
+        <div style={{ marginTop:20, background:'rgba(124,58,237,0.05)', border:'1px solid rgba(124,58,237,0.12)', borderRadius:14, padding:14 }}>
+          <p style={{ fontSize:10, color:'#4b5563', fontWeight:700, textTransform:'uppercase', letterSpacing:2, margin:'0 0 10px' }}>Infrastructure Reference</p>
+          {[
+            ['Backend App',   'terrellos-backend', 'Fly.io'],
+            ['Deploy cmd',    'flyctl deploy -a terrellos-backend', 'CLI'],
+            ['Frontend',      'terrellos-frontend', 'Cloudflare Pages'],
+            ['Build cmd',     'npm run build', 'Vite'],
+            ['Output dir',    'dist', 'Cloudflare'],
+            ['DNS',           'lars.ns.cloudflare.com', 'Cloudflare'],
+          ].map(([label, value, note]) => (
+            <div key={label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'5px 0', borderBottom:'1px solid rgba(124,58,237,0.06)' }}>
+              <span style={{ fontSize:11, color:'#4b5563' }}>{label}</span>
+              <div style={{ textAlign:'right' }}>
+                <span style={{ fontSize:11, color:'#6b7280', fontFamily:'monospace' }}>{value}</span>
+                <span style={{ fontSize:10, color:'#374151', marginLeft:8 }}>{note}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }
