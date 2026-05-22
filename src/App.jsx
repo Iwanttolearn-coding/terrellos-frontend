@@ -84,6 +84,7 @@ import DeploymentCenter from '@/pages/founder/DeploymentCenter';
 
 
 // ── TerrellOS /terrellos/* pages ─────────────────────────────────────────────
+import TerrellOSAssistant from '@/components/TerrellOSAssistant';
 import TerrellOSWelcome       from '@/pages/terrellos/TerrellOSWelcome';
 import TerrellOSDashboard     from '@/pages/terrellos/TerrellOSDashboard';
 import TerrellOSFounder       from '@/pages/terrellos/TerrellOSFounder';
@@ -235,6 +236,7 @@ const AuthenticatedApp = () => {
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
+    <TerrellOSAssistant />
   );
 };
 
