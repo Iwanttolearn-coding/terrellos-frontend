@@ -31,7 +31,7 @@ export default function FounderLogin() {
       // 1. Founder shortcut — no backend call needed
       if (isFounder(email.trim())) {
         const ok = loginAsFounder(email.trim());
-        if (ok) { navigate('/'); return; }
+        if (ok) { navigate('/terrellos/welcome', { replace: true }); return; }
       }
 
       // 2. Regular login via backend
@@ -46,7 +46,7 @@ export default function FounderLogin() {
         const data = await res.json();
         if (data.token) localStorage.setItem('terrellos_token', data.token);
         await checkUserAuth();
-        navigate('/');
+        navigate('/terrellos/welcome', { replace: true });
       } else {
         const err = await res.json().catch(() => ({}));
         setError(err.detail || err.message || 'Login failed. Check your credentials.');
