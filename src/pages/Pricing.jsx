@@ -109,7 +109,7 @@ const COMPARE_ROWS = [
   { feature: 'Support',                 starter: 'Community',pro: 'Priority',   enterprise: 'Dedicated' },
 ];
 
-// ── Checkout via Render backend ──────────────────────────────────────────────
+// ── Checkout via Fly.io backend ─────────────────────────────────────────────
 async function createCheckoutSession(planId, email) {
   const origin = window.location.origin;
   const res = await fetch(`${BACKEND_BASE_URL}/v1/checkout/create`, {

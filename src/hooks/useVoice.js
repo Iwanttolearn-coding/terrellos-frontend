@@ -1,7 +1,7 @@
 /**
  * useVoice.js — TerrellOS
  * ─────────────────────────────────────────────────────────────────
- * React hook for ElevenLabs-powered voice synthesis via Render backend.
+ * React hook for ElevenLabs-powered voice synthesis via Fly.io backend.
  *
  * Usage:
  *   const { speak, speaking, audioRef, error } = useVoice();
@@ -55,7 +55,7 @@ export function useVoice() {
       if (res?.audio_data_url) {
         await playDataUrl(res.audio_data_url);
       } else if (res?.voice_synthesis_status === 'unconfigured') {
-        setError('Voice synthesis not yet configured — set ELEVENLABS_API_KEY in Render.');
+        setError('Voice synthesis not yet configured — check ELEVENLABS_API_KEY is set on the backend.');
       } else {
         setError(res?.message || 'Voice synthesis failed.');
       }

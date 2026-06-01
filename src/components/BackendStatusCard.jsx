@@ -106,7 +106,7 @@ export default function BackendStatusCard() {
         <div className="mt-4 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-200 font-mono">
           {error}
           {error.includes('cold start') || error.includes('timed out') ? (
-            <div className="mt-1 text-red-300/60">Render free tier cold-starts after 15min idle. Try rechecking in ~30s.</div>
+            <div className="mt-1 text-red-300/60">Backend may take a few seconds to respond. Try rechecking shortly.</div>
           ) : null}
         </div>
       )}

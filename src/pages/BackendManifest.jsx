@@ -309,7 +309,7 @@ export default function BackendManifest() {
             <FileCode className="w-4 h-4 text-primary" />
             <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Backend Manifest</span>
           </div>
-          <div className="text-[9px] text-muted-foreground mt-1">Production-grade Python backend structure for Render deployment</div>
+          <div className="text-[9px] text-muted-foreground mt-1">Production-grade Python backend structure for Fly.io deployment</div>
         </div>
         <div className="py-2">
           {TREE.map(item => item.type === 'file' ? (

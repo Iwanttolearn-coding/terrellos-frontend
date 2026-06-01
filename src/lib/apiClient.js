@@ -4,7 +4,7 @@
  * Centralized HTTP transport layer.
  * ALL backend calls go here. No Base44 SDK. No inline fetch().
  *
- * Backend: https://terrellos-backend.fly.dev (Render / FastAPI v7)
+ * Backend: https://terrellos-backend.fly.dev (Fly.io / FastAPI)
  * Docs:    https://terrellos-backend.fly.dev/docs
  *
  * Usage:
@@ -34,7 +34,7 @@ function withTimeout(promise, ms, label = '') {
   let timer;
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(
-      () => reject(new Error(`Request timed out${label ? ` [${label}]` : ''} — backend may be waking up on Render`)),
+      () => reject(new Error(`Request timed out${label ? ` [${label}]` : ''} — backend may be waking up (Fly.io cold-start)`)),
       ms
     );
   });
@@ -43,7 +43,7 @@ function withTimeout(promise, ms, label = '') {
 
 function coldStartWatcher(ms = COLD_START_WARN_MS) {
   const id = setTimeout(() => {
-    console.info('[apiClient] Backend is taking longer than usual — Render cold start likely');
+    console.info('[apiClient] Backend is taking longer than usual — Fly.io may be cold-starting');
   }, ms);
   return () => clearTimeout(id);
 }

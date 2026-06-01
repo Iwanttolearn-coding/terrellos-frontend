@@ -88,7 +88,7 @@ export async function pingHealth() {
     _state.backendColdStarting = isTimeout;
     _state.apiFailureCount++;
     _state.lastError = isTimeout
-      ? 'Backend is waking up on Render…'
+      ? 'Backend is waking up on Fly.io…'
       : err.message;
     _state.initialized = true;
 

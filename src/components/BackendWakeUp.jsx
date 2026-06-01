@@ -1,6 +1,6 @@
 /**
  * BackendWakeUp — shows friendly "waking up" state instead of error
- * when Render backend is cold-starting.
+ * when Fly.io backend is cold-starting.
  */
 import { useState, useEffect } from 'react';
 import { Server, RefreshCw, Wifi, WifiOff } from 'lucide-react';
@@ -33,7 +33,7 @@ export default function BackendWakeUp({ onRetry, message, coldStart = false }) {
         </h3>
         <p className="text-xs text-muted-foreground max-w-xs">
           {coldStart
-            ? 'The TerrellOS backend on Render is spinning up. This takes a few seconds on first request.'
+            ? 'The TerrellOS backend on Fly.io is spinning up. This takes a few seconds on first request.'
             : (message || 'Could not reach the backend. Please try again.')}
         </p>
       </div>

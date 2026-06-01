@@ -1,7 +1,7 @@
 /**
  * useTranscribe.js — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
- * Real-time audio transcription via OpenAI Whisper (Render backend).
+ * Real-time audio transcription via OpenAI Whisper (Fly.io backend).
  * Routes:  POST /v1/memory/transcribe       (multipart file upload)
  *          POST /v1/memory/session/transcript (auto-save if sessionId given)
  * ─────────────────────────────────────────────────────────────────
@@ -57,9 +57,9 @@ export function useTranscribe() {
 
       // Surface missing-key error cleanly
       if (res?.note || !res?.transcript) {
-        const msg = res?.note || 'Transcription returned no text — check OPENAI_API_KEY in Render.';
+        const msg = res?.note || 'Transcription returned no text — check OPENAI_API_KEY is set on the backend.';
         if (msg.includes('OPENAI_API_KEY') || msg.includes('not configured')) {
-          setError('Whisper transcription unavailable — set OPENAI_API_KEY in Render → Environment.');
+          setError('Whisper transcription unavailable — check OPENAI_API_KEY is set on the backend.');
         } else {
           setError(msg);
         }
@@ -68,7 +68,7 @@ export function useTranscribe() {
     } catch (e) {
       const msg = e.message || 'Transcription failed';
       if (msg.includes('OPENAI_API_KEY') || msg.includes('not configured')) {
-        setError('Whisper transcription unavailable — set OPENAI_API_KEY in Render → Environment.');
+        setError('Whisper transcription unavailable — check OPENAI_API_KEY is set on the backend.');
       } else {
         setError(msg);
       }

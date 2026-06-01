@@ -67,7 +67,7 @@ async function apiFetch(endpoint, options = {}, attempt = 0) {
       return apiFetch(endpoint, options, attempt + 1);
     }
 
-    if (err.name === 'AbortError') throw new Error('TIMEOUT: Request timed out. Backend may be cold-starting on Render.');
+    if (err.name === 'AbortError') throw new Error('TIMEOUT: Request timed out. Backend may be cold-starting on Fly.io.');
     throw err;
   }
 }

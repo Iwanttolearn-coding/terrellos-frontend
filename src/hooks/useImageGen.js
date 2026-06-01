@@ -1,7 +1,7 @@
 /**
  * useImageGen.js — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
- * DALL-E 3 image generation via Render backend.
+ * DALL-E 3 image generation via Fly.io backend.
  * Routes:  POST /v1/images/generate
  *          POST /v1/images/memorial
  * ─────────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ export function useImageGen() {
       const msg = e.message || 'Image generation failed';
       // Surface missing-key error clearly
       if (msg.includes('OPENAI_API_KEY') || msg.includes('not configured')) {
-        setError('Image generation unavailable — set OPENAI_API_KEY in Render → Environment.');
+        setError('Image generation unavailable — check OPENAI_API_KEY is set on the backend.');
       } else {
         setError(msg);
       }
@@ -71,7 +71,7 @@ export function useImageGen() {
     } catch (e) {
       const msg = e.message || 'Memorial image generation failed';
       if (msg.includes('OPENAI_API_KEY') || msg.includes('not configured')) {
-        setError('Memorial image unavailable — set OPENAI_API_KEY in Render → Environment.');
+        setError('Memorial image unavailable — check OPENAI_API_KEY is set on the backend.');
       } else {
         setError(msg);
       }

@@ -220,7 +220,7 @@ export default function AIBuilderTool() {
         const errMsg = err.message?.includes('NOT_FOUND')
           ? '⚠️ `/chat` endpoint not found on backend. Deploy your AI route to activate this.'
           : err.message?.includes('timed out') || err.message?.includes('Failed to fetch')
-            ? '⚠️ Backend unreachable. It may be cold-starting on Render — wait 30s and retry.'
+            ? '⚠️ Backend unreachable. It may be cold-starting on Fly.io — wait 30s and retry.'
             : `Error: ${err.message}`;
         setMessages(prev => prev.map(m => m.id === asstMsg.id ? { ...m, streaming: false, content: errMsg, error: true } : m));
       }

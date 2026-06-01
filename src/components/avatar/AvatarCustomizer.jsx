@@ -101,7 +101,7 @@ export default function AvatarCustomizer({ config, onChange, className = '' }) {
         set('aiScene', res.images[0].url);
         notify.success('AI scene generated ✓');
       } else {
-        notify.warn('AI scene generation unavailable — set OPENAI_API_KEY in Render.');
+        notify.warn('AI scene generation unavailable — check OPENAI_API_KEY is set on the backend.');
       }
     } catch (err) {
       notify.error('Scene generation failed: ' + err.message);

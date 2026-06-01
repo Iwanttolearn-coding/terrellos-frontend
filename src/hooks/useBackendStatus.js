@@ -1,7 +1,7 @@
 /**
  * useBackendStatus.js — TerrellOS / TerrellOS
  * ─────────────────────────────────────────────────────────────────
- * Hook for polling /status from the Render backend.
+ * Hook for polling /status from the Fly.io backend.
  * Returns capability flags: chat, voice, images, transcribe, memory.
  *
  * Usage:

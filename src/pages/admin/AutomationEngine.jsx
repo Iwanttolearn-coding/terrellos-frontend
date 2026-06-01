@@ -191,7 +191,7 @@ export default function AutomationEngine() {
         <div className="font-mono text-foreground mb-1">Architecture Status</div>
         Workflow engine UI is production-ready. To persist workflows and execute real backend jobs, deploy
         <code className="font-mono bg-muted px-1 mx-1 rounded">/automation/workflows</code>
-        on your Render FastAPI backend and connect via API Manager.
+        on your Fly.io FastAPI backend and connect via API Manager.
       </div>
     </div>
   );

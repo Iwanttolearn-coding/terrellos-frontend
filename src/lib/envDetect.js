@@ -1,7 +1,7 @@
 /**
  * envDetect.js — Single source of truth for environment detection.
  * PRODUCTION  → app.tm-dezigns.com
- * STAGING     → any other .vercel.app or preview URLs
+ * STAGING     → Cloudflare Pages preview URLs or other non-production origins
  * DEVELOPMENT → localhost / 127.0.0.1
  */
 
@@ -10,7 +10,7 @@ const hostname = typeof window !== 'undefined' ? window.location.hostname : 'loc
 export const ENV = (() => {
   if (hostname === 'app.tm-dezigns.com') return 'production';
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168')) return 'development';
-  return 'staging'; // preview URLs, other vercel deployments, base44 preview
+  return 'staging'; // preview URLs, Cloudflare Pages previews, local preview
 })();
 
 export const IS_PRODUCTION  = ENV === 'production';

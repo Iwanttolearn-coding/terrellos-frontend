@@ -116,7 +116,7 @@ export default function FounderBackendPanel() {
               : <WifiOff className="w-4 h-4 text-red-300" />}
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white">Render Backend</h3>
+            <h3 className="text-sm font-bold text-white">Fly.io Backend</h3>
             <p className="text-[10px] text-white/40 font-mono">{BACKEND_URL}</p>
           </div>
         </div>
