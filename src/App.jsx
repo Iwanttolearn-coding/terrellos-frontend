@@ -149,6 +149,7 @@ const AuthenticatedApp = () => {
   }
 
   return (
+    <>
     <Routes>
       <Route element={<Layout />}>
         {/* ── Core ──────────────────────────────────────────────────────── */}
@@ -237,6 +238,7 @@ const AuthenticatedApp = () => {
       </Route>
     </Routes>
     <TerrellOSAssistant />
+    </>
   );
 };
 

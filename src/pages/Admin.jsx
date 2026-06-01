@@ -1,4 +1,3 @@
-import { loadUser } from '@/lib/resolveUserAccess';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { API_BASE_URL, APP_VERSION, ENVIRONMENT } from '@/lib/env';
@@ -79,7 +78,9 @@ export default function Admin() {
   }
 
   useEffect(() => {
-    Promise.resolve(loadUser()); setAccess(resolveUserAccess(u)); }).catch(() => {});
+    Promise.resolve(loadUser())
+      .then(() => { try { setAccess(resolveUserAccess(u)); } catch {} })
+      .catch(() => {});
     runPing();
   }, []);
 

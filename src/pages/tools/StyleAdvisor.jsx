@@ -20,7 +20,7 @@ const QUICK_PROMPTS = [
   'Best color palette for a dark streetwear brand?',
   'How do I make my DTF designs more vibrant?',
   'Recommend fonts for a luxury tattoo studio brand',
-  'What's trending in blackwork tattoo design?',
+  "What's trending in blackwork tattoo design?",
 ];
 
 export default function StyleAdvisor() {

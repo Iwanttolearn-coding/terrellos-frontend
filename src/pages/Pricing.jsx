@@ -1,4 +1,3 @@
-import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 /**
  * Pricing.jsx — TerrellOS
  * AI-credits builder pricing. Backend-connected checkout.

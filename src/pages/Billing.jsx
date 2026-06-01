@@ -1,4 +1,3 @@
-import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 /**
  * Billing.jsx — TerrellOS
  * AI credit usage, plan status, purchase history.
