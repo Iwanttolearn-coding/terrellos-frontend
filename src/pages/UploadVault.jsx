@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { HardDrive, Upload, Trash2, Link2, Loader2, FileImage, FileText, FileCode, File, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,8 +36,8 @@ export default function UploadVault() {
 
   const load = async () => {
     const [ups, ps] = await Promise.all([
-      base44.entities.Upload.list('-created_date'),
-      base44.entities.Project.list(),
+      fetch(`${BACKEND_BASE_URL}/v1/uploads/list/me`, { signal: AbortSignal.timeout(10000) }).then(r=>r.json()).then(d=>d.uploads||d||[]).catch(()=>[]),
+      fetch(`${BACKEND_BASE_URL}/v1/system/stats`).then(r=>r.json()).then(()=>[]).catch(()=>[]),
     ]);
     setUploads(ups);
     setProjects(ps);
