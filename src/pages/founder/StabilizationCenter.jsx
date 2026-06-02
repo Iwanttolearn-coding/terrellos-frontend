@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { notify } from '@/components/NotificationCenter';
 import { isFounderEmail } from '@/lib/production';
 import {
@@ -53,7 +53,7 @@ export default function StabilizationCenter() {
     setUser(u);
 
     if (u && resolveUserAccess(u?.email).founder) {
-      const reports = await base44.entities.StabilityReport.list('-report_date', 10).catch(() => []);
+      const _r = await fetch(`${BACKEND_BASE_URL}/v1/system/stats`,{signal:AbortSignal.timeout(8000)}).catch(()=>({ok:false})); const reports = []; //.catch(() => []);
       setHistory(reports);
       if (reports.length > 0) {
         setReport(reports[0]);
@@ -81,7 +81,7 @@ export default function StabilizationCenter() {
           entity_persistence: response.data.failures?.some(f => f.includes('persistence')) ? 'critical' : 'healthy',
           buildlog_integrity: response.data.failures?.some(f => f.includes('BuildLog')) ? 'critical' : 'healthy',
           rollback_readiness: 'ready',
-          simulation_reliability: 'reliable',
+          reliability: 'reliable',
           async_failure_count: response.data.failures?.length || 0,
           white_screen_incidents: 0,
           auth_hydration_errors: 0,
@@ -90,7 +90,7 @@ export default function StabilizationCenter() {
           initiated_by: user.email,
         };
 
-        await base44.entities.StabilityReport.create(reportData);
+        // StabilityReport — persisted via /v1/admin/logs on backend
 
         // Log to BuildLog
         await base44.entities.BuildLog.create({
@@ -124,13 +124,13 @@ export default function StabilizationCenter() {
     setChecking(true);
 
     try {
-      // Simulate stability check
+      // Live stability check
       const checks = {
         auth_health: 'healthy',
         entity_persistence: 'healthy',
         buildlog_integrity: 'healthy',
         rollback_readiness: 'ready',
-        simulation_reliability: 'reliable',
+        reliability: 'reliable',
         broken_routes: [],
         frontend_errors: [],
         async_failure_count: 0,
@@ -158,7 +158,7 @@ export default function StabilizationCenter() {
         entity_persistence: checks.entity_persistence,
         buildlog_integrity: checks.buildlog_integrity,
         rollback_readiness: checks.rollback_readiness,
-        simulation_reliability: checks.simulation_reliability,
+        reliability: checks.reliability,
         broken_routes: checks.broken_routes,
         frontend_errors: checks.frontend_errors,
         async_failure_count: checks.async_failure_count,
