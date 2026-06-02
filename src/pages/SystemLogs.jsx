@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { resolveUserAccess, loadUser} from '@/lib/resolveUserAccess';
 import { getSystemLogs } from '@/lib/terrellOS';
 import { ScrollText, RefreshCw, ShieldCheck, CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react';
@@ -44,7 +44,7 @@ export default function SystemLogs() {
     setRefreshing(true);
     try {
       // Try to load from Base44 BuildLog entity
-      const entityLogs = await base44.entities.BuildLog.list('-created_date', 50).catch(() => []);
+      const _r = await fetch(`${BACKEND_BASE_URL}/v1/admin/usage-logs?limit=50`, { signal: AbortSignal.timeout(10000) }).catch(()=>({ok:false})); const _d = _r.ok ? await _r.json() : {}; const entityLogs = _d.logs || [];
       setLogs(entityLogs);
 
       // Also try backend logs
