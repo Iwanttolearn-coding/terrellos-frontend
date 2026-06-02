@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { isFounderEmail } from '@/lib/production';
 import { notify } from '@/components/NotificationCenter';
 import ScanResults from '@/components/diagnostics/ScanResults';
@@ -138,7 +138,7 @@ export default function CodeDiagnostics() {
 
   async function loadHistory() {
     setLogsLoading(true);
-    const rows = await base44.entities.BuildLog.list('-created_date', 30).catch(() => []);
+    const _r = await fetch(`${BACKEND_BASE_URL}/v1/admin/usage-logs?limit=30`,{signal:AbortSignal.timeout(8000)}).catch(()=>({ok:false})); const rows = (_r.ok ? (await _r.json().catch(()=>({}))).logs : null) || (( []);
     setLogs(rows.filter(r => ['analyze_screenshot', 'custom'].includes(r.command_type)));
     setLogsLoading(false);
   }
