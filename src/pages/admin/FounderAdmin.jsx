@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSupabase } from '@/lib/SupabaseContext';
 import { sbData } from '@/lib/supabaseData';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import RouteGuard from '@/components/RouteGuard';
 import PageSkeleton from '@/components/PageSkeleton';
 import { notify } from '@/components/NotificationCenter';
@@ -30,7 +30,7 @@ export default function FounderAdmin() {
     setLoading(true);
     try {
       const [b44Users, eventsRes] = await Promise.all([
-        base44.entities.User.list('-created_date', 50),
+        fetch(`${BACKEND_BASE_URL}/v1/admin/users`,{signal:AbortSignal.timeout(10000)}).then(r=>r.json()).then(d=>d.users||[]).catch(()=>[]),
         sbData.listEvents(50),
       ]);
       setUsers(b44Users || []);
@@ -45,7 +45,7 @@ export default function FounderAdmin() {
 
   async function changeRole(userId, newRole) {
     try {
-      await base44.entities.User.update(userId, { role: newRole });
+      await fetch(`${BACKEND_BASE_URL}/v1/admin/users/${userId}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({role: newRole}), signal: AbortSignal.timeout(8000) });
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
       notify.success('Role updated');
     } catch (err) {
