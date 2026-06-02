@@ -221,44 +221,17 @@ export default function FineTuner() {
           ? { ...j, status: 'running', startedAt: Date.now(), id: data.job_id || jobId }
           : j
         ));
-      } else if (res.status === 404) {
-        // Backend not installed — simulate for demo
-        simulateJob(jobId);
       } else {
-        throw new Error(`HTTP ${res.status}`);
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || errData.error || `HTTP ${res.status}`);
       }
     } catch (err) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NOT_FOUND') || err.message?.includes('404')) {
-        simulateJob(jobId);
-      } else {
-        setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'failed', error: err.message } : j));
-      }
+      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'failed', error: err.message || 'Fine-tune request failed' } : j));
     } finally {
       setLaunching(false);
     }
   }
 
-  function simulateJob(jobId) {
-    setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'running', startedAt: Date.now() } : j));
-    let step = 0;
-    const totalSteps = epochs * 10;
-    const iv = setInterval(() => {
-      step++;
-      const loss = Math.max(0.05, 1.2 - (step / totalSteps) * 1.1 + (Math.random() * 0.05));
-      const accuracy = Math.min(0.99, 0.3 + (step / totalSteps) * 0.65 + (Math.random() * 0.02));
-      setJobs(prev => prev.map(j => j.id === jobId
-        ? { ...j, progress: Math.round((step / totalSteps) * 100), metrics: [...(j.metrics || []), { loss, accuracy }] }
-        : j
-      ));
-      if (step >= totalSteps) {
-        clearInterval(iv);
-        setJobs(prev => prev.map(j => j.id === jobId
-          ? { ...j, status: 'succeeded', progress: 100, modelId: `ft-${jobId.slice(-8)}` }
-          : j
-        ));
-      }
-    }, 600);
-  }
 
   function deleteJob(id) {
     setJobs(prev => prev.filter(j => j.id !== id));
