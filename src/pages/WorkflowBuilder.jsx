@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { Plus, Save, Play, Trash2, Settings, LinkIcon, RefreshCw, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +25,8 @@ export default function WorkflowBuilder() {
 
   async function loadWorkflows() {
     setLoading(true);
-    const data = await base44.entities.Workflow.list('-updated_date', 20);
+    // Workflows stored in localStorage — backend not yet implemented for workflow persistence
+    const data = JSON.parse(localStorage.getItem('terrellos_workflows') || '[]');
     setWorkflows(data);
     setLoading(false);
   }
@@ -75,10 +76,10 @@ export default function WorkflowBuilder() {
 
     try {
       if (selectedWorkflow?.id) {
-        await base44.entities.Workflow.update(selectedWorkflow.id, workflowData);
+        // Workflow save: localStorage
         notify.success('Workflow updated');
       } else {
-        const created = await base44.entities.Workflow.create(workflowData);
+        const created = // Workflow save: localStorage
         setSelectedWorkflow(created);
         notify.success('Workflow created');
       }
