@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { pingBackend } from '@/lib/backendApi';
 import { ENV, currentEnvConfig, IS_PRODUCTION } from '@/lib/envDetect';
 import { APP_VERSION } from '@/lib/env';
@@ -92,7 +92,7 @@ export default function Deployments() {
   async function load() {
     setLoading(true);
     const [deploys, backend] = await Promise.allSettled([
-      base44.entities.Deployment.list('-created_date', 20),
+      fetch(`${BACKEND_BASE_URL}/v1/system/recent-jobs`, { signal: AbortSignal.timeout(10000) }).then(r=>r.json()).then(d=>d.jobs||[]).catch(()=>[]),
       pingBackend(),
     ]);
     if (deploys.status === 'fulfilled') setDeployments(deploys.value);
