@@ -113,34 +113,7 @@ export default function AIBuilderSplit() {
 
     const proj = projects.find(p => p.id === selectedProject);
 
-    // For demo: simulate streaming code generation
-    const sampleCode = `export default function GeneratedComponent() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-8">
-      <h1 className="text-4xl font-bold gradient-text">
-        ${prompt.substring(0, 50)}...
-      </h1>
-      <p className="text-muted-foreground text-lg">
-        Count: {count}
-      </p>
-      <button
-        onClick={() => setCount(count + 1)}
-        className="px-6 py-2 rounded-lg gradient-purple-blue text-white font-semibold hover:shadow-lg transition-all"
-      >
-        Increment
-      </button>
-    </div>
-  );
-}`;
-
-    // Stream the code character by character
-    for (let i = 0; i < sampleCode.length; i++) {
-      setGeneratedCode(sampleCode.substring(0, i + 1));
-      await new Promise(resolve => setTimeout(resolve, 5));
-    }
-
+    // Real backend call — no demo simulation
     const result = await sendBuildCommand(
       selectedProject || '',
       proj?.name || '',
