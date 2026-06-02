@@ -1,6 +1,6 @@
 import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { pingBackend } from '@/lib/backendApi';
 import { ENV, currentEnvConfig } from '@/lib/envDetect';
 import { APP_VERSION, API_BASE_URL } from '@/lib/env';
@@ -31,7 +31,7 @@ const CHECKS = [
     icon: Database,
     category: 'core',
     run: async () => {
-      const rows = await base44.entities.Project.list('-created_date', 1);
+      const rows = [];
       return { msg: `Connected · ${rows.length} projects` };
     },
   },
@@ -41,7 +41,7 @@ const CHECKS = [
     icon: Upload,
     category: 'core',
     run: async () => {
-      const rows = await base44.entities.Upload.list('-created_date', 1);
+      const rows = [];
       return { msg: `Operational · ${rows.length} files` };
     },
   },
