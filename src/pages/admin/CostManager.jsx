@@ -1,6 +1,6 @@
 import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { getEffectiveAccess } from '@/lib/ownerConfig';
 import { DollarSign, Cpu, RefreshCw, ShieldCheck, AlertTriangle, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,19 @@ export default function CostManager() {
 
   async function loadData() {
     setLoading(true);
-    const logs = await base44.entities.BuildLog.list('-created_date', 500);
+    let logs = [];
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/v1/admin/usage-logs`, {
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        logs = data.logs || data.results || [];
+      }
+    } catch (err) {
+      console.error('CostManager fetch failed:', err.message);
+    }
     setLogs(logs);
 
     const now = new Date();
@@ -72,12 +84,13 @@ export default function CostManager() {
       daily.push({ day: d.toLocaleDateString('en', { weekday: 'short' }), cost: parseFloat(estimateReqCost(count).toFixed(4)), requests: count });
     }
 
-    // Provider breakdown (simulated from log types)
-    const byProvider = Object.entries(AI_COSTS).map(([key, v]) => ({
-      provider: v.label,
-      requests: Math.max(0, Math.floor(aiLogs.length * (key === 'openai_mini' ? 0.6 : key === 'claude_sonnet' ? 0.2 : 0.1))),
-      est_cost: parseFloat((aiLogs.length * (key === 'openai_mini' ? 0.6 : 0.2) * estimateReqCost(1)).toFixed(4)),
-    }));
+    // Provider breakdown (estimated from log type distribution)
+    const byProvider = Object.entries(AI_COSTS).map(([key, v]) => {
+      // Use actual log model field if available, else estimate distribution
+      const matched = aiLogs.filter(l => (l.model || '').toLowerCase().includes(key.replace('openai_','').replace('_','-')) || (l.provider || '').toLowerCase().includes(key)).length;
+      const count = matched || Math.max(0, Math.floor(aiLogs.length * (key === 'openai_mini' ? 0.6 : key === 'openai_gpt4o' ? 0.2 : 0.05)));
+      return { provider: v.label, requests: count, est_cost: parseFloat((count * estimateReqCost(1)).toFixed(4)) };
+    });
 
     setCosts({ todayCost, monthCost, totalCost, daily, byProvider, todayReqs: todayLogs.length, monthReqs: monthLogs.length, totalReqs: aiLogs.length });
     setLoading(false);
