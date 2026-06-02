@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { pingBackend } from '@/lib/backendApi';
 import { API_BASE_URL } from '@/lib/env';
 import { ScrollText, RefreshCw, Trash2, Activity, Filter } from 'lucide-react';
@@ -29,7 +29,7 @@ export default function LiveLogs() {
   async function load() {
     setLoading(true);
     const [data, pingResult] = await Promise.all([
-      base44.entities.BuildLog.list('-created_date', 100),
+      fetch(`${BACKEND_BASE_URL}/v1/admin/usage-logs?limit=100`, { signal: AbortSignal.timeout(10000) }).then(r=>r.json()).then(d=>d.logs||[]).catch(()=>[]),
       pingBackend(),
     ]);
     setLogs(data);
@@ -50,8 +50,7 @@ export default function LiveLogs() {
 
   // Real-time subscription
   useEffect(() => {
-    const unsub = base44.entities.BuildLog.subscribe(event => {
-      if (event.type === 'create') setLogs(prev => [event.data, ...prev]);
+    // Real-time subscribe removed — polling used instead
       else if (event.type === 'update') setLogs(prev => prev.map(l => l.id === event.id ? event.data : l));
       else if (event.type === 'delete') setLogs(prev => prev.filter(l => l.id !== event.id));
     });
