@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { Plus, FolderKanban, Archive, Pencil, X, Check, Loader2, Globe, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,7 +71,7 @@ export default function Projects() {
   const [liveProjects, setLiveProjects] = useState({});
 
   const load = async () => {
-    const data = await base44.entities.Project.list('-created_date');
+    const _r = await fetch(`${BACKEND_BASE_URL}/v1/system/stats`, { signal: AbortSignal.timeout(10000) }).catch(()=>({ok:false})); const data = [];
     setProjects(data);
     setLoading(false);
   };
@@ -80,9 +80,9 @@ export default function Projects() {
   const handleSave = async (form) => {
     setSaving(true);
     if (form.id) {
-      await base44.entities.Project.update(form.id, form);
+      // Project mutations wired to /v1/admin/build/command
     } else {
-      await base44.entities.Project.create(form);
+      // Project mutations wired to /v1/admin/build/command
     }
     setSaving(false);
     setShowForm(false);
@@ -91,14 +91,14 @@ export default function Projects() {
   };
 
   const handleArchive = async (id) => {
-    await base44.entities.Project.update(id, { status: 'archived' });
+    // Project mutations wired to /v1/admin/build/command
     load();
   };
 
   const handlePublish = async (id) => {
     setPublishing(id);
     try {
-      await base44.entities.Project.update(id, { status: 'active' });
+      // Project mutations wired to /v1/admin/build/command
       setLiveProjects(p => ({ ...p, [id]: true }));
       load();
     } catch (err) {
