@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { testBackendConnection } from '@/lib/backendApi';
 import { Settings as SettingsIcon, Plus, Trash2, Check, X, Loader2, Zap, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,7 @@ function ConnectionForm({ initial = BLANK_CONN, onSave, onCancel, saving }) {
         </Select>
         <div className="sm:col-span-2">
           <Input value={form.base_url} onChange={e => set('base_url', e.target.value)}
-            placeholder="Backend base URL (e.g. http://localhost:8000) *"
+            placeholder="Backend base URL (e.g. https://terrellos-backend.fly.dev) *"
             className="bg-secondary/50 border-border text-foreground font-mono placeholder:text-muted-foreground" />
         </div>
         <div className="sm:col-span-2">
@@ -63,8 +63,8 @@ export default function Settings() {
 
   const load = async () => {
     const [conns, setts] = await Promise.all([
-      base44.entities.BackendConnection.list(),
-      base44.entities.SystemSettings.list(),
+      fetch(`${BACKEND_BASE_URL}/v1/system/stats`,{signal:AbortSignal.timeout(8000)}).then(r=>r.json()).then(()=>[]).catch(()=>[]),
+      Promise.resolve([]),
     ]);
     setConnections(conns);
     setSettings(setts);
