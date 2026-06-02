@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import {
   Plus, Wrench, Palette, Bug, FileCode2, Rocket, ScanSearch,
@@ -95,8 +95,8 @@ export default function AIBuilderSplit() {
   useEffect(() => {
     async function load() {
       const [ps, conns] = await Promise.all([
-        base44.entities.Project.filter({ status: 'active' }),
-        base44.entities.BackendConnection.filter({ is_active: true }),
+        Promise.resolve([]), // Project list — no SDK
+        fetch(`${BACKEND_BASE_URL}/health`,{signal:AbortSignal.timeout(5000)}).then(r=>r.ok?[{id:'1'}]:[]).catch(()=>[]),
       ]);
       setProjects(ps);
       setBackendAvailable(conns && conns.length > 0);
