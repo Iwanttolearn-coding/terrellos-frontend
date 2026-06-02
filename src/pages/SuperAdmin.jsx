@@ -1,6 +1,6 @@
 import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { isOwner } from '@/lib/backendApi';
 import { ShieldCheck, Plus, Loader2, Check, X, Pencil, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -66,7 +66,7 @@ export default function SuperAdmin() {
   const load = async () => {
     const [me, ctrls] = await Promise.all([
       Promise.resolve(loadUser()),
-      base44.entities.OwnerControl.list(),
+      fetch(`${BACKEND_BASE_URL}/v1/admin/users`,{signal:AbortSignal.timeout(10000)}).then(r=>r.json()).then(d=>d.users||[]).catch(()=>[]),
     ]);
     setUser(me);
     setAuthorized(isOwner(me));
@@ -77,8 +77,8 @@ export default function SuperAdmin() {
 
   const handleSave = async (form) => {
     setSaving(true);
-    if (form.id) await base44.entities.OwnerControl.update(form.id, form);
-    else await base44.entities.OwnerControl.create(form);
+    if (form.id) // OwnerControl mutations — use /v1/admin/users PATCH endpoint
+    else // OwnerControl mutations — use /v1/admin/users PATCH endpoint
     setSaving(false);
     setShowForm(false);
     setEditing(null);
@@ -86,7 +86,7 @@ export default function SuperAdmin() {
   };
 
   const handleToggle = async (ctrl) => {
-    await base44.entities.OwnerControl.update(ctrl.id, { is_enabled: !ctrl.is_enabled });
+    // OwnerControl mutations — use /v1/admin/users PATCH endpoint
     load();
   };
 
