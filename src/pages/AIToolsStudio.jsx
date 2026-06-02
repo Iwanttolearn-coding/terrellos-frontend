@@ -75,6 +75,7 @@ export default function AIToolsStudio() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || data.error || `Error ${res.status}`);
       const url = data.image_url || data.images?.[0]?.url;
+      if (!url) throw new Error("No image returned from API");
       if (!url) throw new Error('No image returned from API');
       const entry = { url, prompt: fullPrompt, style: style.label, timestamp: new Date().toLocaleTimeString() };
       setResult(entry);
@@ -87,8 +88,12 @@ export default function AIToolsStudio() {
 
   const download = (url, filename = 'tm-dezigns-ai') => {
     const a = document.createElement('a');
-    a.href = url; a.download = `${filename}-${Date.now()}.png`;
-    a.target = '_blank'; a.click();
+    if (url.startsWith('data:image')) {
+      a.href = url; a.download = `${filename}-${Date.now()}.jpg`; a.click();
+    } else {
+      a.href = url; a.download = `${filename}-${Date.now()}.png`;
+      a.target = '_blank'; a.click();
+    }
   };
 
   return (
@@ -187,6 +192,7 @@ export default function AIToolsStudio() {
           ) : result ? (
             <div>
               <img src={result.url} alt={result.prompt} className="w-full object-cover" />
+                {data?.provider && <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/70 text-white uppercase tracking-wide">{result.provider || "ai"}</span>}
               <div className="p-4 space-y-3">
                 <p className="text-xs text-gray-400 line-clamp-2">{result.prompt}</p>
                 <div className="flex gap-2">
