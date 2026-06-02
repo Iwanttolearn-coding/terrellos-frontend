@@ -1,195 +1,239 @@
+/**
+ * AccountDashboard.jsx — TerrellOS
+ * Full account view. Uses useAuth + resolveUserAccess only.
+ * No Supabase, no Base44 SDK, no broken dependencies.
+ * Route: /account
+ */
 import { useState } from 'react';
-import { useSupabase } from '@/lib/SupabaseContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useAuth } from '@/lib/AuthContext';
+import { resolveUserAccess } from '@/lib/resolveUserAccess';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import {
   User, Shield, Crown, LogOut, Edit2, Save, X,
-  CheckCircle, Clock, Zap, Star, Activity
+  CheckCircle, Zap, Star, Activity, Mail, CreditCard, ArrowRight
 } from 'lucide-react';
-import { notify } from '@/components/NotificationCenter';
+import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 function PlanBadge({ plan }) {
-  const styles = {
-    ELITE: 'bg-gradient-to-r from-violet-600 to-purple-800 text-white',
-    pro: 'bg-gradient-to-r from-blue-600 to-blue-800 text-white',
-    free: 'bg-secondary text-muted-foreground',
+  const map = {
+    founder:    'bg-gradient-to-r from-amber-500 to-yellow-600 text-black',
+    elite:      'bg-gradient-to-r from-violet-600 to-purple-800 text-white',
+    pro:        'bg-gradient-to-r from-blue-600 to-blue-800 text-white',
+    enterprise: 'bg-gradient-to-r from-amber-500 to-orange-600 text-white',
+    starter:    'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+    free:       'bg-secondary text-muted-foreground',
   };
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${styles[plan] || styles.free}`}>
+    <span className={cn('px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider', map[plan] || map.free)}>
       {plan}
     </span>
   );
 }
 
-function RoleBadge({ role, isFounder }) {
-  if (isFounder) return (
-    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-      <Crown className="w-3 h-3" /> FOUNDER · SUPER_ADMIN
-    </span>
-  );
+function StatCard({ icon: Icon, label, value, color = 'text-primary' }) {
   return (
-    <span className="px-3 py-1 rounded-full text-xs font-bold bg-secondary text-muted-foreground">
-      {role}
-    </span>
+    <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
+      <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center bg-muted/50', color === 'text-primary' ? 'text-primary' : color)}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-bold text-foreground">{value}</p>
+      </div>
+    </div>
   );
 }
 
 export default function AccountDashboard() {
-  const { sbUser, sbProfile, logout, updateProfile, isFounder, isSuperAdmin, isLoggedIn } = useSupabase();
-  const [editing, setEditing] = useState(false);
-  const [fullName, setFullName] = useState(sbProfile?.full_name || '');
-  const [saving, setSaving] = useState(false);
+  const { user, logout } = useAuth();
+  const access = resolveUserAccess(user);
+
+  const [editing,    setEditing]    = useState(false);
+  const [displayName, setDisplayName] = useState(user?.full_name || user?.name || '');
+  const [saving,     setSaving]     = useState(false);
+  const [saveMsg,    setSaveMsg]    = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
 
-  if (!isLoggedIn || !sbProfile) {
+  if (!user) {
     return (
       <div className="p-8 max-w-xl mx-auto mt-10 text-center">
-        <div className="card-glass rounded-2xl p-8 border border-border">
+        <div className="bg-card border border-border rounded-2xl p-8">
           <User className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No Supabase session active.</p>
-          <p className="text-sm text-muted-foreground/60 mt-1">Go to Tools → Supabase Auth to log in.</p>
+          <p className="text-muted-foreground font-medium">Not signed in</p>
+          <Link to="/login" className="mt-4 inline-block px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+            Sign In
+          </Link>
         </div>
       </div>
     );
   }
 
-  async function handleSave() {
+  const plan  = access?.plan  || user?.plan  || 'free';
+  const role  = access?.role  || user?.role  || 'user';
+  const email = user?.email   || '';
+
+  const handleSave = async () => {
     setSaving(true);
     try {
-      await updateProfile({ full_name: fullName });
-      notify.success('Profile saved!');
-      setEditing(false);
-    } catch (err) {
-      notify.error(err.message);
+      const res = await fetch(`${BACKEND_BASE_URL}/v1/auth/update-profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, full_name: displayName }),
+      });
+      if (res.ok) {
+        setSaveMsg('Saved!');
+        setEditing(false);
+      } else {
+        setSaveMsg('Save failed — try again.');
+      }
+    } catch {
+      setSaveMsg('Network error.');
     } finally {
       setSaving(false);
+      setTimeout(() => setSaveMsg(''), 3000);
     }
-  }
+  };
 
-  async function handleLogout() {
+  const handleLogout = () => {
     setLoggingOut(true);
-    await logout();
-    notify.info('Logged out of Supabase.');
-    setLoggingOut(false);
-  }
-
-  const initials = (sbProfile.full_name || sbProfile.email || '?').slice(0, 2).toUpperCase();
-  const joinedDate = sbProfile.created_at ? new Date(sbProfile.created_at).toLocaleDateString() : '—';
-  const lastLogin = sbProfile.last_login ? new Date(sbProfile.last_login).toLocaleString() : '—';
+    setTimeout(() => {
+      logout?.();
+      window.location.href = '/login';
+    }, 300);
+  };
 
   return (
-    <div className="p-4 lg:p-8 max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold gradient-text">Account Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Your Supabase profile & session</p>
+    <div className="max-w-2xl mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-black text-foreground">My Account</h1>
+        {access?.isFounder && (
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            <Crown className="w-3 h-3" /> FOUNDER
+          </span>
+        )}
       </div>
 
       {/* Profile card */}
-      <div className="card-glass rounded-2xl p-6 border border-border mb-4">
+      <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
+        {/* Avatar + identity */}
         <div className="flex items-start gap-4">
-          {/* Avatar */}
-          <div className="w-16 h-16 rounded-2xl gradient-purple-blue flex items-center justify-center text-white text-xl font-bold flex-shrink-0 glow-purple">
-            {initials}
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-800 flex items-center justify-center text-2xl font-black text-white shadow-lg shadow-purple-500/20 flex-shrink-0">
+            {(displayName || email)?.[0]?.toUpperCase() || '?'}
           </div>
-
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-2">
-              {editing ? (
-                <Input
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  className="h-8 text-sm max-w-xs"
-                  placeholder="Full name"
-                />
-              ) : (
-                <span className="text-lg font-bold text-foreground">
-                  {sbProfile.full_name || 'No name set'}
-                </span>
-              )}
-              {isFounder && <Star className="w-4 h-4 text-amber-400" />}
-            </div>
-
-            <p className="text-sm text-muted-foreground font-mono mb-3">{sbProfile.email}</p>
-
-            <div className="flex flex-wrap gap-2">
-              <RoleBadge role={sbProfile.role} isFounder={isFounder} />
-              <PlanBadge plan={sbProfile.plan} />
+            {editing ? (
+              <input
+                className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                value={displayName}
+                onChange={e => setDisplayName(e.target.value)}
+                placeholder="Display name"
+                autoFocus
+              />
+            ) : (
+              <p className="font-bold text-foreground text-base truncate">
+                {displayName || email.split('@')[0]}
+              </p>
+            )}
+            <p className="text-sm text-muted-foreground mt-0.5 truncate">{email}</p>
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <PlanBadge plan={plan} />
+              <span className="px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground capitalize">{role}</span>
             </div>
           </div>
-
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             {editing ? (
               <>
-                <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1">
-                  <Save className="w-3 h-3" /> {saving ? 'Saving…' : 'Save'}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-                  <X className="w-3 h-3" />
-                </Button>
+                <button onClick={handleSave} disabled={saving}
+                  className="p-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50">
+                  <Save className="w-4 h-4" />
+                </button>
+                <button onClick={() => { setEditing(false); setSaveMsg(''); }}
+                  className="p-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
               </>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => setEditing(true)} className="gap-1">
-                <Edit2 className="w-3 h-3" /> Edit
-              </Button>
+              <button onClick={() => setEditing(true)}
+                className="p-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                <Edit2 className="w-4 h-4" />
+              </button>
             )}
           </div>
         </div>
-      </div>
+        {saveMsg && (
+          <p className={cn('text-xs font-medium', saveMsg.includes('Saved') ? 'text-green-400' : 'text-red-400')}>
+            {saveMsg}
+          </p>
+        )}
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="card-glass rounded-xl p-4 border border-border">
-          <div className="flex items-center gap-2 mb-1">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Member Since</span>
-          </div>
-          <div className="text-sm font-semibold text-foreground">{joinedDate}</div>
-        </div>
-        <div className="card-glass rounded-xl p-4 border border-border">
-          <div className="flex items-center gap-2 mb-1">
-            <Activity className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Last Login</span>
-          </div>
-          <div className="text-sm font-semibold text-foreground">{lastLogin}</div>
+        {/* Divider */}
+        <div className="border-t border-border" />
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard icon={Mail}       label="Email"   value={email || '—'} />
+          <StatCard icon={Shield}     label="Role"    value={role || 'user'} />
+          <StatCard icon={Star}       label="Plan"    value={plan} color="text-amber-400" />
+          <StatCard icon={Activity}   label="Status"  value="Active" color="text-green-400" />
         </div>
       </div>
 
-      {/* Access level */}
-      {isSuperAdmin && (
-        <div className="card-glass rounded-xl p-4 border border-amber-500/20 bg-amber-500/5 mb-4">
-          <div className="flex items-center gap-3">
-            <Shield className="w-5 h-5 text-amber-400" />
-            <div>
-              <div className="text-sm font-bold text-amber-400">SUPER_ADMIN · ELITE Access</div>
-              <div className="text-xs text-muted-foreground">All tools unlocked · Unrestricted access · Founder privileges</div>
-            </div>
-            <CheckCircle className="w-4 h-4 text-emerald-400 ml-auto" />
+      {/* Quick links */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link to="/billing"
+          className="flex items-center justify-between bg-card border border-border rounded-xl px-4 py-3 hover:border-primary/50 transition-colors group">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">Billing</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        </Link>
+        <Link to="/pricing"
+          className="flex items-center justify-between bg-card border border-border rounded-xl px-4 py-3 hover:border-primary/50 transition-colors group">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">Upgrade</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        </Link>
+      </div>
+
+      {/* Founder panel */}
+      {access?.isFounder && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Crown className="w-4 h-4 text-amber-400" />
+            <span className="text-sm font-bold text-amber-400">Founder Access</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: 'Admin Panel',    to: '/admin' },
+              { label: 'Backend Status', to: '/backend-status' },
+              { label: 'System Logs',    to: '/system-logs' },
+              { label: 'Founder Center', to: '/founder' },
+            ].map(({ label, to }) => (
+              <Link key={to} to={to}
+                className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium hover:bg-amber-500/20 transition-colors text-center">
+                {label}
+              </Link>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Auth status */}
-      <div className="card-glass rounded-xl p-4 border border-emerald-500/20 bg-emerald-500/5 mb-4">
-        <div className="flex items-center gap-3">
-          <Zap className="w-5 h-5 text-emerald-400" />
-          <div>
-            <div className="text-sm font-bold text-emerald-400">Session Active</div>
-            <div className="text-xs text-muted-foreground font-mono">{sbUser?.id}</div>
-          </div>
-          <div className="ml-auto w-2 h-2 rounded-full bg-emerald-400 animate-pulse-glow" />
-        </div>
-      </div>
-
       {/* Logout */}
-      <Button
-        onClick={handleLogout}
-        disabled={loggingOut}
-        variant="destructive"
-        className="w-full gap-2"
-      >
+      <button onClick={handleLogout} disabled={loggingOut}
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50">
         <LogOut className="w-4 h-4" />
-        {loggingOut ? 'Logging out…' : 'Log out of Supabase'}
-      </Button>
+        {loggingOut ? 'Signing out…' : 'Sign Out'}
+      </button>
+
+      {/* UPL disclaimer */}
+      <p className="text-xs text-muted-foreground/50 text-center leading-relaxed">
+        TerrellOS is an AI productivity platform — not a law firm. No attorney-client or professional privilege is created by use of this service.
+      </p>
     </div>
   );
 }
