@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { pingBackend } from '@/lib/backendApi';
 import { Rocket, RefreshCw, AlertTriangle, CheckCircle, Clock, Zap, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ export default function DeploymentDashboard() {
     setLoading(true);
     try {
       const [deploys, backend] = await Promise.all([
-        base44.entities.Deployment.list('-created_date', 10),
+        fetch(`${BACKEND_BASE_URL}/v1/system/stats`, { signal: AbortSignal.timeout(8000) }).then(r=>r.json()).catch(()=>({})).then(()=>[]),
         pingBackend(),
       ]);
 
@@ -47,11 +47,15 @@ export default function DeploymentDashboard() {
       const active = deploys.find(d => d.status === 'active');
       setCurrentDeployment(active);
 
-      // Simulate service health checks
+      // Real service health from backend ping
       const healthStatus = {};
-      for (const svc of SERVICES) {
-        healthStatus[svc.key] = { ok: backend.ok, latency: backend.latency_ms };
-      }
+      const svcChecks = await Promise.all([
+        fetch(`${BACKEND_BASE_URL}/health`, {signal: AbortSignal.timeout(5000)}).then(r=>({ok:r.ok,latency:0})).catch(()=>({ok:false,latency:0})),
+        fetch(`${BACKEND_BASE_URL}/v1/uploads/health`, {signal: AbortSignal.timeout(5000)}).then(r=>({ok:r.ok,latency:0})).catch(()=>({ok:false,latency:0})),
+        fetch(`${BACKEND_BASE_URL}/v1/voice/health`, {signal: AbortSignal.timeout(5000)}).then(r=>({ok:r.ok,latency:0})).catch(()=>({ok:false,latency:0})),
+        fetch(`${BACKEND_BASE_URL}/v1/admin/usage-logs?limit=1`, {signal: AbortSignal.timeout(5000)}).then(r=>({ok:r.ok,latency:0})).catch(()=>({ok:false,latency:0})),
+      ]);
+      SERVICES.forEach((svc, i) => { healthStatus[svc.key] = svcChecks[i] || { ok: false, latency: 0 }; });
       setServices(healthStatus);
     } catch (err) {
       notify.error('Failed to load deployments');
