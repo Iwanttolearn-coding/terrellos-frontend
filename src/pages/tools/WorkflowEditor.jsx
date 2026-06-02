@@ -297,36 +297,19 @@ export default function WorkflowEditor() {
         (data.steps || []).forEach(s => log(s.message, s.ok !== false));
         log('Workflow completed ✓');
       } else if (res.status === 404) {
-        simulateRun(log);
+        log('Workflow engine not reachable — check backend status', false);
+        setRunning(false);
         return;
       } else {
         throw new Error(`HTTP ${res.status}`);
       }
     } catch (err) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('404')) {
-        simulateRun(log);
-        return;
-      }
-      log(`Error: ${err.message}`, false);
+      log(`Error: ${err.message || 'Backend unreachable — check Fly.io status'}`, false);
     } finally {
       setRunning(false);
     }
   }
 
-  function simulateRun(log) {
-    const steps = workflow.nodes.map(n => NODE_TYPES[n.type]?.label || n.type);
-    let i = 0;
-    const iv = setInterval(() => {
-      if (i < steps.length) {
-        log(`▶ Executing: ${steps[i]}`);
-        i++;
-      } else {
-        log('✓ Simulation complete (backend /workflow/run not installed)');
-        clearInterval(iv);
-        setRunning(false);
-      }
-    }, 500);
-  }
 
   const selNode = workflow?.nodes.find(n => n.id === selectedNode);
 
