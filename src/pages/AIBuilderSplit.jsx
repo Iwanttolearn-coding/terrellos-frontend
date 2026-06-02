@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
-import { sendBuildCommand } from '@/lib/backendApi';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import {
   Plus, Wrench, Palette, Bug, FileCode2, Rocket, ScanSearch,
   Loader2, X, Check, AlertTriangle, Mic, ChevronDown, Eye, Copy, RefreshCw
@@ -113,15 +113,33 @@ export default function AIBuilderSplit() {
 
     const proj = projects.find(p => p.id === selectedProject);
 
-    // Real backend call — no demo simulation
-    const result = await sendBuildCommand(
-      selectedProject || '',
-      proj?.name || '',
-      activeAction.key,
-      prompt.trim()
-    );
+    // Real backend call to Fly.io /v1/admin/build/command
+    let result = { success: false, error: 'Unknown error' };
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/v1/admin/build/command`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_id: selectedProject || '',
+          project_name: proj?.name || '',
+          command_type: activeAction.key,
+          prompt: prompt.trim(),
+          app_id: 'terrellos',
+        }),
+        signal: AbortSignal.timeout(45000),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        result = { success: true, generated_code: data.generated_code, command_type: data.command_type, tokens: data.tokens_used };
+      } else {
+        result = { success: false, error: data.detail || data.error || `HTTP ${res.status}` };
+      }
+    } catch (err) {
+      result = { success: false, error: err.name === 'AbortError' ? 'Request timed out — backend may be waking up' : err.message };
+    }
 
     setLastResult(result);
+    if (result?.generated_code) setGeneratedCode(result.generated_code);
     setSubmitting(false);
     setStreaming(false);
     setPrompt('');
