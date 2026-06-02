@@ -1,6 +1,6 @@
 import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { pingBackend } from '@/lib/backendApi';
 import { getEffectiveAccess } from '@/lib/ownerConfig';
 import { Terminal, RefreshCw, Trash2, Download, Circle, Pause, Play, Filter, ShieldCheck } from 'lucide-react';
@@ -75,7 +75,7 @@ export default function LiveConsole() {
       .catch(() => {});
 
     async function loadInitial() {
-      const logs = await base44.entities.BuildLog.list('-created_date', 50);
+      const _r = await fetch(`${BACKEND_BASE_URL}/v1/admin/usage-logs?limit=50`, {signal: AbortSignal.timeout(10000)}).catch(()=>({ok:false})); const logs = _r.ok ? ((await _r.json()).logs || []) : [];
       const initial = buildEventsFromLogs(logs);
       setEvents(initial.reverse());
       setLoading(false);
