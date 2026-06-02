@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { ScrollText, RefreshCw, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,7 +19,9 @@ export default function BuildLogs() {
   const load = async (quiet = false) => {
     if (!quiet) setLoading(true);
     else setRefreshing(true);
-    const data = await base44.entities.BuildLog.list('-created_date', 100);
+    const res = await fetch(`${BACKEND_BASE_URL}/v1/admin/usage-logs?limit=100`, { signal: AbortSignal.timeout(10000) });
+    const json = res.ok ? await res.json() : { logs: [] };
+    const data = json.logs || [];
     setLogs(data);
     setLoading(false);
     setRefreshing(false);
@@ -27,7 +29,7 @@ export default function BuildLogs() {
   useEffect(() => { load(); }, []);
 
   const handleDelete = async (id) => {
-    await base44.entities.BuildLog.delete(id);
+    // Delete not supported via backend — clear from local state only
     load(true);
   };
 
