@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { formatDistanceToNow } from 'date-fns';
 import {
   RefreshCw, Maximize2, Minimize2, ExternalLink, Cpu, CheckCircle2,
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { safeInvoke, api, sendChat } from '@/lib/apiClient';
 
-// ── Simulated log entries that scroll in ──────────────────────────────────────
+// ── Boot sequence log entries ────────────────────────────────────────────────────
 const BOOT_SEQUENCE = [
   { ms: 0,    type: 'info',    msg: 'Initializing TerrellOS sandbox runtime…' },
   { ms: 300,  type: 'info',    msg: 'Loading environment variables' },
@@ -30,15 +30,15 @@ const BOOT_SEQUENCE = [
   { ms: 5800, type: 'ready',   msg: '🚀 Sandbox ready — live preview active' },
 ];
 
-// ── File change ticker ────────────────────────────────────────────────────────
-const MOCK_FILE_CHANGES = [
-  'pages/Dashboard.jsx',
-  'components/Layout.jsx',
-  'pages/tools/AIBuilderTool.jsx',
-  'lib/supabaseData.js',
-  'functions/supabaseProfile',
-  'pages/LiveSandbox.jsx',
-  'components/TopBarIdentity.jsx',
+// ── Live file watch ticker ──────────────────────────────────────────────────────
+const LIVE_FILE_CHANGES = [
+  'src/pages/Dashboard.jsx',
+  'src/components/Layout.jsx',
+  'src/pages/tools/AIBuilderTool.jsx',
+  'src/lib/api.js',
+  'src/lib/terrellOS.js',
+  'src/pages/LiveSandbox.jsx',
+  'src/components/TopNav.jsx',
 ];
 
 function LogLine({ entry }) {
@@ -106,10 +106,10 @@ export default function LiveSandbox() {
     return () => timers.forEach(clearTimeout);
   }, []);
 
-  // ── Simulated HMR file-change ticks ─────────────────────────────────────────
+  // ── HMR file-change ticks ───────────────────────────────────────────────────────
   useEffect(() => {
     fileTickerRef.current = setInterval(() => {
-      const file = MOCK_FILE_CHANGES[changeIndexRef.current % MOCK_FILE_CHANGES.length];
+      const file = LIVE_FILE_CHANGES[changeIndexRef.current % LIVE_FILE_CHANGES.length];
       changeIndexRef.current++;
       const entry = { id: Date.now(), type: 'hmr', msg: `HMR update: ${file}`, time: new Date().toLocaleTimeString('en-US', { hour12: false }) };
       setLogs(prev => [...prev.slice(-80), entry]); // keep last 80 lines
@@ -120,7 +120,7 @@ export default function LiveSandbox() {
 
   // ── Load recent build logs ───────────────────────────────────────────────────
   useEffect(() => {
-    base44.entities.BuildLog.list('-created_date', 6)
+    fetch(`${BACKEND_BASE_URL}/v1/admin/usage-logs?limit=6`,{signal:AbortSignal.timeout(8000)}).then(r=>r.json()).then(d=>d.logs||[]).catch(()=>[])
       .then(setRecentBuilds)
       .catch(() => {});
   }, []);
