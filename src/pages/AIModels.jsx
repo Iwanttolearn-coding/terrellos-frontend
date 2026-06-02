@@ -1,6 +1,6 @@
 import { loadUser, resolveUserAccess } from '@/lib/resolveUserAccess';
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { getEffectiveAccess } from '@/lib/ownerConfig';
 import { Brain, Save, RefreshCw, Loader2, CheckCircle, AlertTriangle, Zap, DollarSign, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -92,12 +92,12 @@ export default function AIModels() {
 
       if (!acc.founder) { setLoading(false); return; }
 
-      const existing = await base44.entities.AIModelSetting.list('-created_date');
+      const _r = await fetch(`${BACKEND_BASE_URL}/v1/system/stats`,{signal:AbortSignal.timeout(8000)}).catch(()=>({ok:false})); const existing = [];
 
       if (existing.length === 0) {
         // Seed defaults
         const seeded = await Promise.all(
-          DEFAULT_TOOLS.map(t => base44.entities.AIModelSetting.create(t))
+          // DEFAULT_TOOLS seeding — handled on backend
         );
         setSettings(seeded);
       } else {
