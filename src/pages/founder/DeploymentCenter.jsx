@@ -803,7 +803,7 @@ export default function DeploymentCenter() {
               {Object.entries(deploymentStatus.deployment.health_checks).map(([check, result]) => (
                 <HealthCheckCard
                   key={check}
-                  title={check.replace(/_/g, ' ').toUpperCase()}
+                  title={check.split('_').join(' ').toUpperCase()}
                   status={result.status}
                   details={result.latency_ms ? `${result.latency_ms}ms` : ''}
                 />
