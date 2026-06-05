@@ -138,7 +138,7 @@ export default function CodeDiagnostics() {
 
   async function loadHistory() {
     setLogsLoading(true);
-    const _r = await fetch(`${BACKEND_BASE_URL}/v1/admin/usage-logs?limit=30`,{signal:AbortSignal.timeout(8000)}).catch(()=>({ok:false})); const rows = (_r.ok ? (await _r.json().catch(()=>({}))).logs : null) || (( []);
+      const _r = await fetch(`${BACKEND_BASE_URL}/v1/admin/usage-logs?limit=30`,{signal:AbortSignal.timeout(8000)}).catch(()=>({ok:false})); const rows = (_r.ok ? (await _r.json().catch(()=>({}))).logs : null) || [];
     setLogs(rows.filter(r => ['analyze_screenshot', 'custom'].includes(r.command_type)));
     setLogsLoading(false);
   }
