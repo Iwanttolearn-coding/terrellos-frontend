@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: terrellos-frontend
+    env: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    pullRequestPreviewsEnabled: false
+    branch: main
+    envVars:
+      - key: VITE_BACKEND_URL
+        value: https://terrellos-backend.fly.dev
+      - key: VITE_APP_NAME
+        value: TerrellOS
+      - key: VITE_APP_ID
+        value: terrellos
+      - key: VITE_APP_DOMAIN
+        value: https://app.tm-dezigns.com
+      - key: VITE_ENVIRONMENT
+        value: production
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
