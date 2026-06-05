@@ -77,8 +77,14 @@ export default function SuperAdmin() {
 
   const handleSave = async (form) => {
     setSaving(true);
-    if (form.id) // OwnerControl mutations — use /v1/admin/users PATCH endpoint
-    else // OwnerControl mutations — use /v1/admin/users PATCH endpoint
+    const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
+    const token = localStorage.getItem('auth_token');
+    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'X-App-ID': 'terrellos' };
+    if (form.id) {
+      await fetch(`${BACKEND}/v1/admin/users/${form.id}`, { method: 'PATCH', headers, body: JSON.stringify(form) });
+    } else {
+      await fetch(`${BACKEND}/v1/admin/users`, { method: 'POST', headers, body: JSON.stringify(form) });
+    }
     setSaving(false);
     setShowForm(false);
     setEditing(null);
@@ -86,7 +92,10 @@ export default function SuperAdmin() {
   };
 
   const handleToggle = async (ctrl) => {
-    // OwnerControl mutations — use /v1/admin/users PATCH endpoint
+    const BACKEND2 = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
+    const tok2 = localStorage.getItem('auth_token');
+    const hdrs2 = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok2}`, 'X-App-ID': 'terrellos' };
+    await fetch(`${BACKEND2}/v1/admin/controls/${ctrl.id}/toggle`, { method: 'PATCH', headers: hdrs2 }).catch(() => {});
     load();
   };
 
