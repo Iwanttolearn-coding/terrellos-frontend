@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { BACKEND_BASE_URL } from '@/lib/terrellOS';
-import { BACKEND_BASE_URL } from '@/lib/terrellOS';
 import {
   Plus, Wrench, Palette, Bug, FileCode2, Rocket, ScanSearch,
   Loader2, X, Check, AlertTriangle, Mic, ChevronDown, Eye, Copy, RefreshCw
