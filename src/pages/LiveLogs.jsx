@@ -51,8 +51,6 @@ export default function LiveLogs() {
   // Real-time subscription
   useEffect(() => {
     // Real-time subscribe removed — polling used instead
-      else if (event.type === 'update') setLogs(prev => prev.map(l => l.id === event.id ? event.data : l));
-      else if (event.type === 'delete') setLogs(prev => prev.filter(l => l.id !== event.id));
     });
     return unsub;
   }, []);
