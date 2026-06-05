@@ -48,11 +48,9 @@ export default function LiveLogs() {
     return () => clearInterval(intervalRef.current);
   }, [autoRefresh]);
 
-  // Real-time subscription
+  // Real-time subscription (polling used instead)
   useEffect(() => {
-    // Real-time subscribe removed — polling used instead
-    });
-    return unsub;
+    return () => {};
   }, []);
 
   const FILTERS = ['all', 'success', 'failed', 'running', 'pending'];
