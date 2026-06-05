@@ -652,7 +652,7 @@ export default function DeploymentCenter() {
               size="sm"
               className="gap-1.5 text-xs"
             >
-              {checkingReadiness ? <RefreshCw className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+              {checkingReadiness ? (<RefreshCw className="w-3 h-3 animate-spin" />) : (<CheckCircle className="w-3 h-3" />}
               Check Readiness
             </Button>
             <Button
@@ -662,7 +662,7 @@ export default function DeploymentCenter() {
               size="sm"
               className="gap-1.5 text-xs"
             >
-              {checkingRollback ? <RefreshCw className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
+              {checkingRollback ? (<RefreshCw className="w-3 h-3 animate-spin" />) : (<RotateCcw className="w-3 h-3" />}
               Rollback Ready
             </Button>
             {selectedEnvironment === 'staging' && (
@@ -673,7 +673,7 @@ export default function DeploymentCenter() {
                 size="sm"
                 className="gap-1.5 text-xs"
               >
-                {checkingStagingHealth ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Activity className="w-3 h-3" />}
+                {checkingStagingHealth ? (<RefreshCw className="w-3 h-3 animate-spin" />) : (<Activity className="w-3 h-3" />}
                 Staging Health
               </Button>
             )}
@@ -735,7 +735,7 @@ export default function DeploymentCenter() {
               variant="outline"
               className="flex-1 gap-2 border-primary/40 text-primary hover:bg-primary/10 h-11"
             >
-              {pipelineRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Bolt className="w-4 h-4" />}
+              {pipelineRunning ? (<RefreshCw className="w-4 h-4 animate-spin" />) : (<Bolt className="w-4 h-4" />}
               {pipelineRunning ? 'Running Pipeline…' : 'Full Pipeline Validation'}
             </Button>
             <Button
@@ -743,7 +743,7 @@ export default function DeploymentCenter() {
               disabled={deploying || !selectedRelease || (selectedEnvironment === 'production' && selectedRelease.status !== 'READY_TO_DEPLOY') || (readinessCheck?.critical_failures > 0)}
               className="flex-1 gap-2 gradient-purple-blue text-white border-0 h-11"
             >
-              {deploying ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {deploying ? (<RefreshCw className="w-4 h-4 animate-spin" />) : (<Send className="w-4 h-4" />}
               {deploying ? 'Deploying…' : `Deploy to ${selectedEnvironment.toUpperCase()}`}
             </Button>
           </div>
