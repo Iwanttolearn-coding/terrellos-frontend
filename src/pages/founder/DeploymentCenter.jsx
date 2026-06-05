@@ -92,7 +92,7 @@ function DeploymentTimeline({ currentStep }) {
               }`}
             >
               <div
-                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                   isPast
                     ? 'bg-emerald-400 text-background'
                     : isActive
@@ -492,7 +492,7 @@ export default function DeploymentCenter() {
                       : 'bg-destructive/10 border-destructive/25'
                   }`}
                 >
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                     phase.status === 'pass'
                       ? 'bg-emerald-400 text-background'
                       : 'bg-destructive text-white'
@@ -503,7 +503,7 @@ export default function DeploymentCenter() {
                     <div className="font-semibold text-sm text-foreground">{phase.label}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">{phase.message}</div>
                   </div>
-                  <span className="text-[10px] font-mono text-muted-foreground flex-shrink-0">{phase.duration_ms}ms</span>
+                  <span className="text-xs font-mono text-muted-foreground flex-shrink-0">{phase.duration_ms}ms</span>
                 </div>
               ))}
             </div>
@@ -512,14 +512,14 @@ export default function DeploymentCenter() {
           {pipelineResults.success && (
             <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-sm space-y-2">
               <div className="font-bold flex items-center gap-2">
-                <span className="px-2 py-0.5 bg-emerald-400 text-background text-[10px] font-mono rounded">DRY-RUN</span>
+                <span className="px-2 py-0.5 bg-emerald-400 text-background text-xs font-mono rounded">DRY-RUN</span>
                 ✓ Safe to Deploy
               </div>
               <div className="text-xs">
                 All 12 pipeline phases passed in simulation. TerrellOS is ready for production deployment. Proceed to Release Gate approval.
               </div>
               {pipelineResults.recommendation && (
-                <div className="text-[11px] font-mono mt-2 pt-2 border-t border-emerald-500/30">
+                <div className="text-xs font-mono mt-2 pt-2 border-t border-emerald-500/30">
                   Deployment Recommendation: <span className="text-emerald-200 font-bold">{pipelineResults.recommendation.toUpperCase()}</span>
                 </div>
               )}
@@ -529,7 +529,7 @@ export default function DeploymentCenter() {
           {!pipelineResults.success && (
             <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/25 text-destructive text-sm space-y-2">
               <div className="font-bold flex items-center gap-2">
-                <span className="px-2 py-0.5 bg-destructive text-white text-[10px] font-mono rounded">DRY-RUN</span>
+                <span className="px-2 py-0.5 bg-destructive text-white text-xs font-mono rounded">DRY-RUN</span>
                 ✕ Deployment Blocked
               </div>
               <div className="text-xs">
@@ -788,7 +788,7 @@ export default function DeploymentCenter() {
                     <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
                   )}
                   <span className="flex-1">[Step {log.step}] {log.message}</span>
-                  <span className="text-[10px] text-muted-foreground/60 flex-shrink-0">
+                  <span className="text-xs text-muted-foreground/60 flex-shrink-0">
                     {new Date(log.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
@@ -832,11 +832,11 @@ export default function DeploymentCenter() {
                   <div className="text-xs font-semibold text-foreground">
                     {dep.app_name} → {dep.environment}
                   </div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                  <div className="text-xs text-muted-foreground mt-0.5">
                     {dep.status} · {dep.duration_ms}ms
                   </div>
                 </div>
-                <div className="text-[10px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   {formatDistanceToNow(new Date(dep.started_at), { addSuffix: true })}
                 </div>
               </div>
