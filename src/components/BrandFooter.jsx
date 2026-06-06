@@ -47,6 +47,12 @@ export function BrandFooter() {
       <div style={{ fontSize: 11, color: '#374151', marginTop: 4 }}>
         AI Seminary · Bible College · Sermon Factory · Discipleship Academy
       </div>
+      <div style={{ fontSize: 10, color: '#374151', marginTop: 6, lineHeight: 1.6 }}>
+        © 2026 TerrellOS · TM Dezigns · Terrell Mills · (210) 846-6103
+      </div>
+      <div style={{ fontSize: 10, color: '#4B5563', marginTop: 4 }}>
+        ⚠️ AI outputs are for assistance only — not professional legal, medical, or counseling advice.
+      </div>
     </footer>
   )
 }
