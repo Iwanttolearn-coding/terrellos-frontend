@@ -1,15 +1,25 @@
 {
-  "name": "TM Dezigns AI Designer",
-  "short_name": "TM Dezigns",
-  "description": "AI-powered creative design suite — image gen, tattoo studio, and print tools",
-  "start_url": "/",
+  "name": "TerrellOS",
+  "short_name": "TerrellOS",
+  "description": "AI-powered command center for builders, creators, and founders. Deploy, build, manage, and launch from your phone.",
+  "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#030712",
-  "theme_color": "#7c3aed",
-  "orientation": "any",
+  "orientation": "portrait",
+  "background_color": "#050510",
+  "theme_color": "#00F5FF",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["productivity", "tools", "business"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
-  "categories": ["design", "art", "productivity"]
+  "shortcuts": [
+    { "name": "Dashboard",       "url": "/dashboard",   "description": "Main command center" },
+    { "name": "AI Builder",      "url": "/ai-builder",  "description": "Build with AI" },
+    { "name": "Deployments",     "url": "/deployment",  "description": "Manage deployments" }
+  ],
+  "related_applications": [
+    { "platform": "play", "url": "https://play.google.com/store/apps/details?id=com.tmdesignz.terrellos" }
+  ]
 }
