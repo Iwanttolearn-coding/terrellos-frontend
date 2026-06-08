@@ -1,5 +1,5 @@
 /**
- * RouteGuard.jsx — TM Dezigns AI Designer
+ * RouteGuard.jsx — TerrellOS
  * Uses AuthContext + resolveUserAccess ONLY. No Base44 SDK. No loops.
  * Founder always passes every gate.
  */
