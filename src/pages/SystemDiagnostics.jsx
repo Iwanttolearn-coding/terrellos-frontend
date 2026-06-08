@@ -46,12 +46,12 @@ const CHECKS = [
     },
   },
   {
-    key: 'base44',
-    label: 'Base44 Platform',
+    key: 'fly_backend',
+    label: 'Fly.io Backend',
     icon: Zap,
     category: 'core',
     run: async () => {
-      await base44.entities.BuildLog.list('-created_date', 1);
+      await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev'}/health`);
       return { msg: 'Operational' };
     },
   },
@@ -117,7 +117,7 @@ const CHECKS = [
     icon: CreditCard,
     category: 'core',
     run: async () => {
-      await base44.entities.BuildLog.list('-created_date', 1);
+      await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev'}/health`);
       return { msg: 'Operational' };
     },
   },
