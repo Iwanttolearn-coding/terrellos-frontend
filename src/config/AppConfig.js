@@ -10,7 +10,7 @@ export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://terrello
 export const APP_CONFIGS = {
   'terrellos': {
     name: 'TerrellOS',
-    tagline: 'Powered by TM Dezigns',
+    tagline: 'Powered by TerrellOS',
     domain: 'app.tm-dezigns.com',
     theme: 'purple',
     primaryColor: '#7c3aed',
