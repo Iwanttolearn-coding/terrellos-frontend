@@ -1,5 +1,5 @@
 /**
- * BackgroundSelector.jsx — TM Dezigns AI Designer
+ * BackgroundSelector.jsx — TerrellOS
  * Coming soon — production implementation in progress.
  */
 import React from 'react';
