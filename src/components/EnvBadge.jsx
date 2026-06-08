@@ -2,6 +2,7 @@
  * EnvBadge — global environment indicator shown in the top bar.
  * PRODUCTION / STAGING / DEV
  */
+import React from 'react';
 import { ENV, currentEnvConfig } from '@/lib/envDetect';
 import { Shield } from 'lucide-react';
 
