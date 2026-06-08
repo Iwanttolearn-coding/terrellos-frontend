@@ -11,7 +11,7 @@ import { loadUser } from '@/lib/resolveUserAccess';
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
 
 function getToken() {
-  try { return localStorage.getItem('terrellos_token') || ''; } catch { return ''; }
+  try { return localStorage.getItem('terrellos_token') || localStorage.getItem('terrellos_access_token') || ''; } catch { return ''; }
 }
 
 async function flyFetch(path, opts = {}) {
