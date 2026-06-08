@@ -2,6 +2,7 @@
  * BackgroundSelector.jsx — TM Dezigns AI Designer
  * Coming soon — production implementation in progress.
  */
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Construction, ArrowLeft } from 'lucide-react';
 
