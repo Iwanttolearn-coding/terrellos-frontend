@@ -1,6 +1,7 @@
 /**
  * EnvWarning — shows a founder/admin warning when VITE_BACKEND_URL is missing.
  */
+import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { isFounderEmail } from '@/lib/resolveUserAccess';
 
