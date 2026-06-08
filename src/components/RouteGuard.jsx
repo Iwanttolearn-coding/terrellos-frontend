@@ -3,6 +3,7 @@
  * Uses AuthContext + resolveUserAccess ONLY. No Base44 SDK. No loops.
  * Founder always passes every gate.
  */
+import React from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import { ShieldOff } from 'lucide-react';
