@@ -1,16 +1,25 @@
 /**
  * envDetect.js — Single source of truth for environment detection.
- * PRODUCTION  → app.tm-dezigns.com
- * STAGING     → Cloudflare Pages preview URLs or other non-production origins
- * DEVELOPMENT → localhost / 127.0.0.1
+ * PRODUCTION  → app.tm-dezigns.com  OR  terrellos-frontend.onrender.com
+ * DEVELOPMENT → localhost / 127.0.0.1 / 192.168.x
+ * STAGING     → any other preview URL
  */
 
 const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 
+// All hostnames treated as production
+const PRODUCTION_HOSTNAMES = new Set([
+  'app.tm-dezigns.com',
+  'terrellos-frontend.onrender.com',
+]);
+
+// Also treat *.onrender.com as production (Render live deployments)
+const isRenderProduction = hostname.endsWith('.onrender.com');
+
 export const ENV = (() => {
-  if (hostname === 'app.tm-dezigns.com') return 'production';
+  if (PRODUCTION_HOSTNAMES.has(hostname) || isRenderProduction) return 'production';
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168')) return 'development';
-  return 'staging'; // preview URLs, Cloudflare Pages previews, local preview
+  return 'staging'; // preview URLs only
 })();
 
 export const IS_PRODUCTION  = ENV === 'production';
