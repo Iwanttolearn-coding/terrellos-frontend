@@ -121,7 +121,7 @@ export default function FounderLogin() {
           )}
         </form>
 
-        <p className="text-center text-xs text-gray-700 mt-6">TerrellOS AI Engine · Powered by TM Dezigns</p>
+        <p className="text-center text-xs text-gray-700 mt-6">TerrellOS AI Engine · Powered by TerrellOS</p>
       </div>
     </div>
   );
