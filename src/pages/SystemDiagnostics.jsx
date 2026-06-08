@@ -78,8 +78,8 @@ const CHECKS = [
     },
   },
   {
-    key: 'vercel',
-    label: 'Vercel (Production)',
+    key: 'render_frontend',
+    label: 'Render (Frontend — app.tm-dezigns.com)',
     icon: Cloud,
     category: 'infra',
     run: async () => {
