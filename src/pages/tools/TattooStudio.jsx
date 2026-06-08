@@ -1,5 +1,5 @@
 /**
- * TattooStudio.jsx — TM Dezigns AI Designer
+ * TattooStudio.jsx — TerrellOS
  * Real DALL-E 3 tattoo generation. Auto-saves to Creator Vault.
  * No fake data. Real loading/error/retry states.
  */
@@ -124,7 +124,7 @@ export default function TattooStudio() {
           </div>
           <div>
             <h1 className="text-xl font-black text-white">AI Tattoo Studio</h1>
-            <p className="text-xs text-gray-500">TM Dezigns · DALL-E 3 · Auto-saves to Creator Vault</p>
+            <p className="text-xs text-gray-500">TerrellOS · DALL-E 3 · Auto-saves to Creator Vault</p>
           </div>
         </div>
         <Link to="/tools/creator-vault"
