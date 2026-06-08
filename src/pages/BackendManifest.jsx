@@ -27,7 +27,7 @@ UPLOAD_SECRET=
 API_SECRET=
 ENVIRONMENT=production
 OWNER_EMAIL=millzterrell210@icloud.com
-CORS_ORIGINS=https://your-base44-app.base44.app`,
+CORS_ORIGINS=https://your-base44-app.fly.dev`,
 
   'app.py': `from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
