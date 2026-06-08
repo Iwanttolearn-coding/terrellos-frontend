@@ -1,5 +1,5 @@
 /**
- * AIToolsStudio.jsx — TM Dezigns AI Designer
+ * AIToolsStudio.jsx — TerrellOS
  * Real AI image generation via terrellos-backend.fly.dev
  * No fake results. No demo mode. Loading/error/retry states.
  */
@@ -105,7 +105,7 @@ export default function AIToolsStudio() {
         </div>
         <div>
           <h1 className="text-xl font-black text-white">AI Image Studio</h1>
-          <p className="text-xs text-gray-500">TM Dezigns · Powered by DALL-E 3</p>
+          <p className="text-xs text-gray-500">TerrellOS · Powered by DALL-E 3</p>
         </div>
         {access.founder && (
           <span className="ml-auto text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-full font-medium">👑 Founder</span>
