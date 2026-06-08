@@ -1,6 +1,6 @@
 /**
  * BrandFooter.jsx
- * "TerrellOS — Powered by TM Dezigns"
+ * "TerrellOS — Powered by TerrellOS"
  * Drop this into Layout, Dashboard, FounderCenter, etc.
  */
 import React from 'react'
@@ -22,7 +22,7 @@ export function BrandHeader({ minimal = false }) {
       {!minimal && (
         <div style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.4 }}>
           <div style={{ color: '#9ca3af', fontWeight: 600 }}>Powered by</div>
-          <div style={{ color: '#a78bfa', fontWeight: 800, letterSpacing: '0.05em' }}>TM DEZIGNS</div>
+          <div style={{ color: '#a78bfa', fontWeight: 800, letterSpacing: '0.05em' }}>TERRELLOS</div>
         </div>
       )}
     </div>
@@ -42,13 +42,13 @@ export function BrandFooter() {
         {' '}·{' '}
         <span style={{ color: '#6b7280' }}>Powered by</span>
         {' '}
-        <span style={{ color: '#a78bfa', fontWeight: 800 }}>TM DEZIGNS</span>
+        <span style={{ color: '#a78bfa', fontWeight: 800 }}>TERRELLOS</span>
       </div>
       <div style={{ fontSize: 11, color: '#374151', marginTop: 4 }}>
         AI Seminary · Bible College · Sermon Factory · Discipleship Academy
       </div>
       <div style={{ fontSize: 10, color: '#374151', marginTop: 6, lineHeight: 1.6 }}>
-        © 2026 TerrellOS · TM Dezigns · Terrell Mills · (210) 846-6103
+        © 2026 TerrellOS · TerrellOS · Terrell Mills · (210) 846-6103
       </div>
       <div style={{ fontSize: 10, color: '#4B5563', marginTop: 4 }}>
         ⚠️ AI outputs are for assistance only — not professional legal, medical, or counseling advice.
