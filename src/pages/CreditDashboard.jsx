@@ -1,3 +1,4 @@
+import React from 'react';
 import CreditMonitor from '@/components/dashboard/CreditMonitor';
 import { Zap, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
