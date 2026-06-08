@@ -2,6 +2,7 @@
  * TerrellOSSettings.jsx — TerrellOS
  * TerrellOS Settings — polished stub, no loops, no blank screens.
  */
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 export default function TerrellOSSettings() {
   const navigate = useNavigate();
