@@ -3,6 +3,7 @@
  * Uses resolveUserAccess() as the single source of truth.
  * Founder ALWAYS passes. No loops. No external auth checks.
  */
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveUserAccess } from '@/lib/resolveUserAccess';
