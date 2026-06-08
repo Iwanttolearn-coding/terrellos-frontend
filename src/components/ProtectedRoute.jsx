@@ -1,5 +1,5 @@
 /**
- * ProtectedRoute.jsx — TM Dezigns AI Designer
+ * ProtectedRoute.jsx — TerrellOS
  * Uses resolveUserAccess() as the single source of truth.
  * Founder ALWAYS passes. No loops. No external auth checks.
  */
