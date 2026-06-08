@@ -1,5 +1,5 @@
 /**
- * BackendStatusBar.jsx — TM Dezigns AI Designer
+ * BackendStatusBar.jsx — TerrellOS
  * Live backend status in topbar. Real ping. No demo.
  */
 import { useState, useEffect } from 'react';
