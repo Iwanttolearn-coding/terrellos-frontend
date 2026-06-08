@@ -1,5 +1,5 @@
 /**
- * ProductionGuard.jsx — TM Dezigns AI Designer
+ * ProductionGuard.jsx — TerrellOS
  * Renders children always. No environment locking. No Vercel references.
  * Imported resolveUserAccess so it participates in the authority system.
  */
