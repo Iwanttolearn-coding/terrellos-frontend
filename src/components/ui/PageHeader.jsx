@@ -1,3 +1,4 @@
+import React from 'react';
 export default function PageHeader({ title, subtitle, action }) {
   return (
     <div className="flex items-start justify-between gap-4 mb-8">
