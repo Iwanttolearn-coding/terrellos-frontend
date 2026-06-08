@@ -250,7 +250,7 @@ export default function TerrellOSWelcome() {
             <div style={{ width:32, height:32, borderRadius:10, background:'linear-gradient(135deg,#7c3aed,#4f46e5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, boxShadow:'0 4px 12px rgba(124,58,237,0.3)' }}>⚡</div>
             <div>
               <p style={{ fontSize:11, color:'#4b5563', margin:0, textTransform:'uppercase', letterSpacing:2 }}>TerrellOS</p>
-              <p style={{ fontSize:11, color:'#1f2937', margin:0 }}>app.tm-dezigns.com</p>
+              <p style={{ fontSize:11, color:'#1f2937', margin:0 }}>TerrellOS</p>
             </div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -335,7 +335,7 @@ export default function TerrellOSWelcome() {
               </div>
               {[
                 { label:'Backend',   value:'terrellos-backend.fly.dev', status:'online' },
-                { label:'Frontend',  value:'app.tm-dezigns.com',        status:'online' },
+                { label:'Frontend',  value:'TerrellOS (Render)',        status:'online' },
                 { label:'DNS',       value:'Cloudflare',                status:'online' },
                 { label:'AI Model',  value:'gpt-4o / gpt-image-1',     status:'online' },
               ].map(item => (
