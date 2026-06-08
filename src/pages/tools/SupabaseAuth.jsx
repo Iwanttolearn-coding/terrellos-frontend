@@ -2,6 +2,7 @@
  * SupabaseAuth.jsx — TerrellOS
  * Polished Coming Soon — not a dead blank.
  */
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Construction } from 'lucide-react';
 export default function SupabaseAuth() {
