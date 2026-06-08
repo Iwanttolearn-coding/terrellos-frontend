@@ -1,3 +1,4 @@
+import React from 'react';
 import { CheckCircle, AlertTriangle, Lock, Clock, Play, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
