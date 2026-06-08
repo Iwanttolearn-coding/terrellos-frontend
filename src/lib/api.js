@@ -1,5 +1,5 @@
 /**
- * api.js — TM Dezigns AI Designer / TerrellOS
+ * api.js — TerrellOS / TerrellOS
  * ═══════════════════════════════════════════════════════════════
  * SINGLE CENTRAL API LAYER. Import from here everywhere.
  * All calls go to VITE_BACKEND_URL → terrellos-backend.fly.dev
