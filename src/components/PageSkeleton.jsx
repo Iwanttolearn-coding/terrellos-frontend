@@ -1,3 +1,4 @@
+import React from 'react';
 /**
  * PageSkeleton — full-page loading skeleton, replaces white screens.
  */
