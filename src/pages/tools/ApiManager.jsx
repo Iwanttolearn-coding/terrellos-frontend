@@ -64,7 +64,7 @@ export default function ApiManager() {
       {modelInfo && !modelInfo.is_active && (
         <div className="mb-4 flex items-center gap-2 px-4 py-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 text-sm">
           <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-          Vercel Deployment Fixer is disabled. Enable it in <a href="/ai-models" className="underline ml-1">AI Models →</a>
+          Render/Fly Deployment Fixer is disabled. Enable it in <a href="/ai-models" className="underline ml-1">AI Models →</a>
         </div>
       )}
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
