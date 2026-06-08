@@ -105,7 +105,7 @@
     "typescript": "^5.8.2",
     "vite": "^6.1.0"
   },
-  "description": "TerrellOS \u2014 Powered by TM Dezigns",
+  "description": "TerrellOS \u2014 Powered by TerrellOS",
   "overrides": {
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
