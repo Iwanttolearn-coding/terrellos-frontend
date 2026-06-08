@@ -6,13 +6,18 @@ services:
     staticPublishPath: dist
     pullRequestPreviewsEnabled: false
     branch: main
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
     envVars:
       - key: VITE_BACKEND_URL
         value: https://terrellos-backend.fly.dev
       - key: VITE_APP_NAME
         value: TerrellOS
-      - key: VITE_APP_ID
-        value: terrellos
       - key: VITE_APP_DOMAIN
         value: https://app.tm-dezigns.com
       - key: VITE_ENVIRONMENT
