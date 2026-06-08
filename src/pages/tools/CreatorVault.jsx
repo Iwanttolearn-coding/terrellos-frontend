@@ -1,5 +1,5 @@
 /**
- * CreatorVault.jsx — TM Dezigns AI Designer
+ * CreatorVault.jsx — TerrellOS
  * Upload + Gallery. Real API. No fake data. Persistent per user.
  * Founder/admin can view all user projects.
  */
