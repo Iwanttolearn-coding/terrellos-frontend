@@ -1,7 +1,7 @@
 /**
  * Dashboard.jsx — TerrellOS
  * Real command center. Live backend health. TerrellOS branding.
- * No fake data. No TM Dezigns AI Designer label.
+ * No fake data. No TerrellOS label.
  */
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
