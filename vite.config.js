@@ -27,3 +27,4 @@ export default defineConfig({
   },
   server: { port: 5173 }
 })
+// deploy-trigger: 1780956075
