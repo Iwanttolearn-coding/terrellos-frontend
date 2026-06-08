@@ -50,7 +50,7 @@ export default function PatchCenter() {
   const [verificationResults, setVerificationResults] = useState(null);
   const [patches, setPatches] = useState([]);
   const [patchesLoading, setPatchesLoading] = useState(true);
-  const [selectedRepo, setSelectedRepo] = useState('base44dev/terrellosbuild');
+  const [selectedRepo, setSelectedRepo] = useState('Iwanttolearn-coding/terrellos-frontend');
   const [showTokenWarning, setShowTokenWarning] = useState(false);
   const [workflows, setWorkflows] = useState([]);
   const [activeWorkflow, setActiveWorkflow] = useState(null);
