@@ -85,7 +85,7 @@ export default function Layout() {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-black text-white">TerrellOS</p>
-            <p className="text-xs text-gray-500 truncate">app.tm-dezigns.com</p>
+            <p className="text-xs text-gray-500 truncate">TerrellOS</p>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-gray-500 hover:text-white">
             <X className="w-4 h-4" />
