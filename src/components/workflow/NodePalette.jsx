@@ -1,3 +1,4 @@
+import React from 'react';
 import { Brain, Mic, BookOpen, GitBranch, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
