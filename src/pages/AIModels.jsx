@@ -24,7 +24,7 @@ const DEFAULT_TOOLS = [
   { tool_key: 'error_debugger',     tool_name: 'Error Debugger',        model: 'gpt-4.1',      provider: 'openai',    cost_level: 'high',      best_use: 'Root cause analysis and fix generation',    is_active: true },
   { tool_key: 'code_generator',     tool_name: 'Code Generator',        model: 'gpt-4.1',      provider: 'openai',    cost_level: 'high',      best_use: 'Precise code output with line changes',     is_active: true },
   { tool_key: 'supabase_architect', tool_name: 'Supabase Architect',    model: 'gpt-4.1-mini', provider: 'openai',    cost_level: 'low',       best_use: 'Schema design + SQL generation',            is_active: true },
-  { tool_key: 'vercel_fixer',       tool_name: 'Vercel Deployment Fixer', model: 'gpt-4.1',    provider: 'openai',    cost_level: 'high',      best_use: 'Deployment errors + config issues',         is_active: true },
+  { tool_key: 'vercel_fixer',       tool_name: 'Render/Fly Deployment Fixer', model: 'gpt-4.1',    provider: 'openai',    cost_level: 'high',      best_use: 'Deployment errors + config issues',         is_active: true },
   { tool_key: 'voice_assistant',    tool_name: 'Voice Assistant',       model: 'gpt-4o',       provider: 'openai',    cost_level: 'medium',    best_use: 'Real-time voice and multimodal tasks',      is_active: true },
   { tool_key: 'app_builder',        tool_name: 'App Builder',           model: 'gpt-4.1',      provider: 'openai',    cost_level: 'high',      best_use: 'Full-stack app scaffolding',                is_active: true },
   { tool_key: 'document_writer',    tool_name: 'Document Writer',       model: 'gpt-4.1-mini', provider: 'openai',    cost_level: 'low',       best_use: 'Docs, readmes, changelogs, summaries',      is_active: true },
