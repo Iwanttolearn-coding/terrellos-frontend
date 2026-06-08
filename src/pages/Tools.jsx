@@ -3,6 +3,7 @@
  * Uses resolveUserAccess().permissions for all gates.
  * Founder bypasses everything. No church/memorial branding.
  */
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
