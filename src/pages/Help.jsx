@@ -1,3 +1,4 @@
+import React from 'react';
 import { HelpCircle, MessageSquare, Book, ExternalLink, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
