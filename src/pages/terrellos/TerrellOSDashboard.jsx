@@ -2,6 +2,7 @@
  * TerrellOSDashboard.jsx — TerrellOS
  * Dashboard — polished stub, no loops, no blank screens.
  */
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 export default function TerrellOSDashboard() {
   const navigate = useNavigate();
