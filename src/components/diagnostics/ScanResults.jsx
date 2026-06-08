@@ -1,3 +1,4 @@
+import React from 'react';
 import { CheckCircle, XCircle, AlertTriangle, FileCode, Zap, Shield, Server, GitBranch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
