@@ -1,5 +1,5 @@
 /**
- * FounderCenter.jsx — TM Dezigns AI Designer
+ * FounderCenter.jsx — TerrellOS
  * Founder Command Center. Real system status. No fake data.
  * Only accessible to: millzterrell210@icloud.com, millzterrell5@gmail.com
  */
@@ -97,7 +97,7 @@ export default function FounderCenter() {
             </span>
           </div>
           <h1 className="text-3xl font-black text-white">Founder Command Center</h1>
-          <p className="text-gray-400 text-sm mt-1">TM Dezigns AI Designer · {access.displayName}</p>
+          <p className="text-gray-400 text-sm mt-1">TerrellOS · {access.displayName}</p>
         </div>
         <button onClick={checkHealth} disabled={checking}
           className="flex items-center gap-2 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl px-4 py-2.5 transition-all">
