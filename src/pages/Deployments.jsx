@@ -24,7 +24,7 @@ const ENVIRONMENTS = [
   {
     env: 'staging',
     label: 'Staging / Preview',
-    url: 'https://terrellosbuild.base44.app',
+    url: 'https://app.tm-dezigns.com',
     branch: 'preview',
     isPrimary: false,
   },
