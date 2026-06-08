@@ -1,6 +1,7 @@
 /**
  * VoiceButton — animated press-to-talk button with live volume ring.
  */
+import React from 'react';
 import { Mic, MicOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
