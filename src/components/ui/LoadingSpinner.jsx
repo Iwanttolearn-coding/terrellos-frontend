@@ -5,6 +5,7 @@
  *   <LoadingSpinner size="sm" inline /> — inline small spinner
  *   <LoadingSpinner label="Fetching data…" /> — with label
  */
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 export default function LoadingSpinner({ size = 'md', inline = false, label = '', className = '' }) {
