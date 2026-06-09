@@ -10,7 +10,12 @@ jobs:
     name: Trigger Render Deploy
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Render deploy hook
+      - name: Trigger Render deploy via API
         run: |
-          curl -s --fail -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
-          echo "✅ Render deploy triggered"
+          curl -s --fail \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache":"do_not_clear"}' \
+            "https://api.render.com/v1/services/srv-d8h3iac8aovs73endf6g/deploys"
+          echo "✅ Render deploy triggered for terrellos-frontend"
