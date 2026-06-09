@@ -1,80 +1,82 @@
-# Pastor AI Connect — Frontend
-**Powered by TM Dezigns**
-**Connected to TerrellOS AI Engine**
+# TerrellOS — AI Command Center Frontend
+
+**Owner:** Terrell Mills  
+**Live URL:** https://app.tm-dezigns.com
 
 ---
 
-## App Identity
+## Hosting
 
-| App | Role |
-|-----|------|
-| **Pastor AI Connect** | Standalone frontend app — church tools, sermons, discipleship, Bible study |
-| **TerrellOS** | Master AI/backend engine — AI, voice, memory, system tools |
+| Layer | Platform | URL | Status |
+|-------|----------|-----|--------|
+| TerrellOS Frontend | **Netlify** | https://app.tm-dezigns.com | ✅ LIVE |
+| TerrellOS Backend | Fly.io | https://terrellos-backend.fly.dev | ✅ LIVE |
 
-Pastor AI Connect is its own app.
-It uses TerrellOS as its shared AI and backend engine.
-They are **not** the same app.
-
----
-
-## Hosting: Cloudflare Pages
-
-- **Live URL:** https://app.tm-dezigns.org
-- **Platform:** Cloudflare Pages
-- **Framework:** Vite (React)
+- **Platform:** Netlify (terrellos-frontend-tm)
 - **Build command:** `npm run build`
 - **Output directory:** `dist`
 - **Branch:** `main`
+- **Node version:** 20
+
+> ⚠️ Vercel — NOT IN USE  
+> ⚠️ Cloudflare Pages — NOT IN USE  
+> ⚠️ Railway — NOT IN USE  
+> ⚠️ Base44 — build tool / export only, NOT runtime hosting
 
 ---
 
-## Environment Variables (set in Cloudflare Pages dashboard)
+## Environment Variables (set in Netlify dashboard)
 
 ```
 VITE_BACKEND_URL=https://terrellos-backend.fly.dev
+VITE_APP_NAME=TerrellOS
+VITE_APP_DOMAIN=app.tm-dezigns.com
+VITE_ENVIRONMENT=production
 ```
 
 ---
 
 ## Backend / AI Engine
 
-- **System:** TerrellOS
 - **Platform:** Fly.io
+- **App name:** terrellos-backend
 - **URL:** https://terrellos-backend.fly.dev
+- **Deploy:** `flyctl deploy -a terrellos-backend`
 - **Repo:** Iwanttolearn-coding/terrellos-backend
-- **What it provides:** AI chat, voice synthesis, image generation, memory, sermon engine, transcription
 
 ---
 
-## Platform Map
+## Deploy
 
-| Layer | Platform | URL | Status |
-|-------|----------|-----|--------|
-| Pastor AI Frontend | Cloudflare Pages | https://app.tm-dezigns.org | ✅ Active |
-| TerrellOS Backend / AI Engine | Fly.io | https://terrellos-backend.fly.dev | ✅ Active |
-| Railway | — | — | ❌ NOT IN USE |
-| Vercel | — | — | ❌ REPLACED by Cloudflare Pages |
-| Base44 | Export/build source | — | 🔧 Build tool only, not runtime |
+Auto-deploys on every push to `main` via Netlify GitHub integration.
+
+Manual trigger: Netlify dashboard → **Deploys** → **Trigger deploy**
+
+> If Netlify loses GitHub access: Settings → Build & Deploy → Link repository → re-authorize GitHub → select `Iwanttolearn-coding/terrellos-frontend`
 
 ---
 
-## Fly.io Secrets Required (terrellos-backend)
+## Fly.io Secrets (terrellos-backend)
 
 ```
 OPENAI_API_KEY=...
 ELEVENLABS_API_KEY=...
 ELEVENLABS_VOICE_ID=...
-FRONTEND_URL=https://app.tm-dezigns.org
+SUPABASE_URL=...
+SUPABASE_SERVICE_KEY=...
+FRONTEND_URL=https://app.tm-dezigns.com
+PAYPAL_CLIENT_ID=...
+PAYPAL_CLIENT_SECRET=...
 ```
 
 ---
 
 ## Founder Access
 
-The following emails always resolve to `super_admin / founder / unlimited`:
+Always resolves to `super_admin / founder / unlimited`:
 - `millzterrell210@icloud.com`
 - `millzterrell5@gmail.com`
 
-Enforced globally via `src/lib/founderAccess.js`
+Enforced via `src/lib/founderAccess.js`
 
-<!-- build trigger: 2026-05-20T17:12 -->
+<!-- last updated: 2026-06-09 -->
