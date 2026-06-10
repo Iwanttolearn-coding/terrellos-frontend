@@ -1,35 +1,50 @@
 /**
- * envDetect.js — Single source of truth for environment detection.
- * PRODUCTION  → app.tm-dezigns.com  OR  terrellos-frontend.onrender.com
- * DEVELOPMENT → localhost / 127.0.0.1 / 192.168.x
- * STAGING     → any other preview URL
+ * envDetect.js — TerrellOS environment detection
+ * STACK: Frontend → Netlify (terrellos-frontend-tm.netlify.app / app.tm-dezigns.com)
+ *        Backend  → Fly.io  (terrellos-backend.fly.dev)
+ *        DNS      → Cloudflare (lars + wally nameservers)
  */
 
 const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 
-// All hostnames treated as production
+// All canonical production hostnames
 const PRODUCTION_HOSTNAMES = new Set([
-  'app.tm-dezigns.com',
-  'terrellos-frontend.onrender.com',
+  'app.tm-dezigns.com',                        // custom domain (Cloudflare → Netlify)
+  'terrellos-frontend-tm.netlify.app',         // Netlify deploy URL
+  'terrellos-frontend.onrender.com',           // Render fallback
 ]);
 
-// Also treat *.onrender.com as production (Render live deployments)
-const isRenderProduction = hostname.endsWith('.onrender.com');
+// Any *.netlify.app or *.onrender.com subdomain = production
+const isNetlifyDeploy = hostname.endsWith('.netlify.app');
+const isRenderDeploy  = hostname.endsWith('.onrender.com');
 
 export const ENV = (() => {
-  if (PRODUCTION_HOSTNAMES.has(hostname) || isRenderProduction) return 'production';
+  if (PRODUCTION_HOSTNAMES.has(hostname) || isNetlifyDeploy || isRenderDeploy) return 'production';
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168')) return 'development';
-  return 'staging'; // preview URLs only
+  return 'staging';
 })();
 
 export const IS_PRODUCTION  = ENV === 'production';
 export const IS_STAGING     = ENV === 'staging';
 export const IS_DEVELOPMENT = ENV === 'development';
 
+/** Runtime platform label — shows in UI diagnostics */
+export const PLATFORM_LABEL = (() => {
+  if (hostname === 'app.tm-dezigns.com')              return 'TerrellOS · Cloudflare + Netlify';
+  if (hostname.endsWith('.netlify.app'))               return 'TerrellOS · Netlify';
+  if (hostname.endsWith('.onrender.com'))              return 'TerrellOS · Render';
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return 'TerrellOS · Local Dev';
+  return 'TerrellOS';
+})();
+
+export const BACKEND_LABEL = 'Fly.io · terrellos-backend';
+
 /** Config gated by environment */
 export const ENV_CONFIG = {
   production: {
     label: 'PRODUCTION',
+    platform: PLATFORM_LABEL,
+    backend: BACKEND_LABEL,
     badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
     dotClass: 'bg-emerald-400',
     supabaseEnabled: true,
@@ -40,34 +55,28 @@ export const ENV_CONFIG = {
   },
   staging: {
     label: 'PREVIEW',
+    platform: PLATFORM_LABEL,
+    backend: BACKEND_LABEL,
     badgeClass: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
     dotClass: 'bg-yellow-400',
     supabaseEnabled: true,
     openaiEnabled: true,
-    subscriptionsEnabled: true,
-    founderRoutingEnabled: true,
+    subscriptionsEnabled: false,
+    founderRoutingEnabled: false,
     writeProtected: false,
   },
   development: {
-    label: 'DEV',
+    label: 'LOCAL DEV',
+    platform: 'localhost',
+    backend: BACKEND_LABEL,
     badgeClass: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
     dotClass: 'bg-blue-400',
-    supabaseEnabled: false,
-    openaiEnabled: false,
+    supabaseEnabled: true,
+    openaiEnabled: true,
     subscriptionsEnabled: false,
     founderRoutingEnabled: false,
-    writeProtected: true,
+    writeProtected: false,
   },
 };
 
-export const currentEnvConfig = ENV_CONFIG[ENV];
-
-/**
- * Production write guard — throws if a write is attempted outside production.
- * Use this before any live data mutations in critical settings paths.
- */
-export function assertProductionWrite(label = 'This action') {
-  if (!IS_PRODUCTION) {
-    throw new Error(`${label} is locked — only allowed in PRODUCTION environment. Current: ${ENV.toUpperCase()}`);
-  }
-}
+export const CURRENT_ENV_CONFIG = ENV_CONFIG[ENV];
