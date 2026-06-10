@@ -80,3 +80,6 @@ export const ENV_CONFIG = {
 };
 
 export const CURRENT_ENV_CONFIG = ENV_CONFIG[ENV];
+
+// Backward-compat alias
+export const currentEnvConfig = CURRENT_ENV_CONFIG;
