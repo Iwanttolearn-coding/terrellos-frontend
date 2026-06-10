@@ -76,7 +76,10 @@ export default function BackendStatus() {
           <h1 className="text-2xl font-black text-white flex items-center gap-2">
             <Activity className="w-6 h-6 text-violet-400" /> System Status
           </h1>
-          <p className="text-sm text-gray-500 mt-1">TerrellOS AI Engine · {BACKEND}</p>
+          <p className="text-sm text-gray-500 mt-1">
+              🌐 Cloudflare DNS · ▲ Netlify Frontend · 🚀 Fly.io Backend
+            </p>
+            <p className="text-xs text-gray-600 mt-0.5 font-mono">{BACKEND}</p>
         </div>
         <button onClick={check} disabled={checking}
           className="flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl text-sm text-white transition-all">
