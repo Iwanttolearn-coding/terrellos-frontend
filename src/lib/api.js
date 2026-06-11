@@ -63,7 +63,7 @@ export const speakText = (text, voice_id = null) =>
   apiFetch('/v1/voice/speak', { method: 'POST', body: JSON.stringify({ text, voice_id, app_id: APP_ID }) });
 
 export const transcribeAudio = (formData) =>
-  fetch(`${BACKEND}/v1/voice/transcribe`, {
+  fetch(`${BACKEND}/v1/transcribe/audio`, {
     method: 'POST',
     headers: { 'X-App-ID': APP_ID },
     body: formData,

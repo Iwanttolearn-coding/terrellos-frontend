@@ -72,7 +72,7 @@ export const speakText = (payload) =>
   })
 
 export const companionRespond = (message) =>
-  apiFetch('/v1/companion/respond', {
+  apiFetch('/v1/echo/companion', {
     method: 'POST',
     body: JSON.stringify({ message })
   })
@@ -99,7 +99,7 @@ export async function uploadFile(file) {
   const formData = new FormData()
   formData.append('file', file)
 
-  const res = await fetch(`${BASE_URL}/v1/upload`, {
+  const res = await fetch(`${BASE_URL}/v1/uploads/file`, {
     method: 'POST',
     body: formData
   })
