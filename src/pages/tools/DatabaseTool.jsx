@@ -14,7 +14,9 @@ export default function DatabaseTool() {
           <ArrowLeft size={12}/> Back
         </button>
         <div style={{ textAlign:'center', background:'#0a0a0a', border:'1px solid #1a1a1a', borderRadius:20, padding:'40px 24px' }}>
-          <div style={{ fontSize:52, marginBottom:16 }}>🗄️</div>
+          <div style={{ width:64, height:64, borderRadius:18, background:"linear-gradient(135deg,#0a1628,#0d2448)", border:"1px solid rgba(59,130,246,0.4)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", boxShadow:"0 0 24px rgba(59,130,246,0.15)" }}>
+            <Database size={28} color="#60a5fa" />
+          </div>
           <h2 style={{ fontSize:20, fontWeight:900, color:'white', margin:'0 0 8px' }}>Database Console</h2>
           <p style={{ fontSize:13, color:'#4b5563', margin:'0 0 20px', lineHeight:1.6 }}>Direct database inspection and query tools. Available in the next TerrellOS release.</p>
           
