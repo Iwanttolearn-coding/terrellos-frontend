@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import {
+import IMG from '@/lib/sectionImages';
   Crown, Zap, Activity, Server, Users, CreditCard,
   Wrench, Rocket, BarChart2, ArrowRight, AlertCircle,
   CheckCircle, XCircle, RefreshCw, Globe, Brain, Mic,
