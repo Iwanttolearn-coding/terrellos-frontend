@@ -14,7 +14,9 @@ export default function SupabaseStatus() {
           <ArrowLeft size={12}/> Back
         </button>
         <div style={{ textAlign:'center', background:'#0a0a0a', border:'1px solid #1a1a1a', borderRadius:20, padding:'40px 24px' }}>
-          <div style={{ fontSize:52, marginBottom:16 }}>📊</div>
+          <div style={{ width:64, height:64, borderRadius:18, background:"linear-gradient(135deg,#1f1000,#3b1e00)", border:"1px solid rgba(251,191,36,0.4)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", boxShadow:"0 0 24px rgba(251,191,36,0.15)" }}>
+            <BarChart2 size={28} color="#fbbf24" />
+          </div>
           <h2 style={{ fontSize:20, fontWeight:900, color:'white', margin:'0 0 8px' }}>Data Status</h2>
           <p style={{ fontSize:13, color:'#4b5563', margin:'0 0 20px', lineHeight:1.6 }}>Database connectivity and performance monitoring. Connects to TerrellOS system health.</p>
           
