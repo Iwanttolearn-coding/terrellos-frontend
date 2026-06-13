@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { RefreshCw, CheckCircle, XCircle, AlertCircle, Activity, Zap } from 'lucide-react';
+import IMG from '@/lib/sectionImages';
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
 
@@ -70,6 +71,20 @@ export default function BackendStatus() {
 
   return (
     <div className="p-4 lg:p-8 max-w-2xl mx-auto pb-24">
+      {/* System Status Banner */}
+      <div style={{ position:"relative", width:"100%", height:140, overflow:"hidden", borderRadius:14, marginBottom:20 }}>
+        <img src={IMG.systemStatus} alt="System Health"
+          style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center", filter:"brightness(0.4)" }} />
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,rgba(3,0,7,0.5),rgba(16,185,129,0.15))" }} />
+        <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", padding:"0 24px", gap:14 }}>
+          <div style={{ width:44, height:44, borderRadius:12, background:"rgba(16,185,129,0.2)", border:"1px solid rgba(16,185,129,0.4)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>⚡</div>
+          <div>
+            <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.15em", color:"#6ee7b7", textTransform:"uppercase", marginBottom:4 }}>Live Infrastructure</div>
+            <div style={{ fontSize:20, fontWeight:900, color:"#fff" }}>Backend Status</div>
+            <div style={{ color:"#6ee7b7", fontSize:12, marginTop:2 }}>Fly.io · API health · Service endpoints</div>
+          </div>
+        </div>
+      </div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
