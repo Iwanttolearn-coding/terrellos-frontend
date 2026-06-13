@@ -14,7 +14,7 @@ import {
   Crown, Zap, Activity, Server, Users, CreditCard,
   Wrench, Rocket, BarChart2, ArrowRight, AlertCircle,
   CheckCircle, XCircle, RefreshCw, Globe, Brain, Mic,
-  Shield, Code, Database, Terminal
+  Shield, ShieldOff, Code, Database, Terminal
 } from 'lucide-react';
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || 'https://terrellos-backend.fly.dev';
@@ -224,7 +224,9 @@ export default function TerrellOSWelcome() {
     return (
       <div style={{ minHeight:'100vh', background:'#030007', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
         <div style={{ maxWidth:320, textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
-          <div style={{ fontSize:36 }}>🔒</div>
+          <div style={{ width:56, height:56, borderRadius:16, background:"rgba(124,58,237,0.12)", border:"1px solid rgba(124,58,237,0.35)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto" }}>
+          <ShieldOff size={24} color="#a78bfa" />
+        </div>
           <h2 style={{ fontSize:18, fontWeight:900, color:'white', margin:0 }}>Access Required</h2>
           <p style={{ fontSize:13, color:'#4b5563', margin:0 }}>Upgrade your plan to access TerrellOS.</p>
           <button onClick={() => navigate('/pricing')} style={{ padding:'11px 28px', borderRadius:10, background:'linear-gradient(135deg,#7c3aed,#4f46e5)', border:'none', color:'white', fontWeight:700, fontSize:13, cursor:'pointer' }}>
