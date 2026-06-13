@@ -168,6 +168,17 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20">
+      {/* Pricing Hero Banner */}
+      <div style={{ position:"relative", width:"100%", height:200, overflow:"hidden", marginBottom:0 }}>
+        <img src={IMG.pricing} alt="TerrellOS Plans"
+          style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center", filter:"brightness(0.4)" }} />
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom, rgba(3,0,7,0.2) 0%, rgba(3,0,7,0.8) 100%)" }} />
+        <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.15em", color:"#a78bfa", textTransform:"uppercase", marginBottom:8 }}>Unlock the Full OS</div>
+          <div style={{ fontSize:28, fontWeight:900, color:"#fff" }}>TerrellOS Plans</div>
+          <div style={{ color:"#c4b5fd", fontSize:13, marginTop:6 }}>Choose the tier that fits your build.</div>
+        </div>
+      </div>
 
       {/* Backend status pill */}
       <div className="flex justify-end px-6 pt-4">
