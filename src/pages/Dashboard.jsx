@@ -4,6 +4,7 @@
  * No fake data. No TerrellOS label.
  */
 import { useEffect, useState, useCallback } from 'react';
+import IMG from '@/lib/sectionImages';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveUserAccess } from '@/lib/resolveUserAccess';
@@ -74,6 +75,12 @@ export default function Dashboard() {
       <div style={{ position:'fixed', top:'10%', left:'50%', transform:'translateX(-50%)', width:500, height:200, background:'radial-gradient(ellipse, rgba(124,58,237,0.05) 0%, transparent 70%)', pointerEvents:'none', zIndex:0 }} />
 
       <div style={{ maxWidth:1100, margin:'0 auto', position:'relative', zIndex:1 }}>
+      {/* Ambient Hero Banner */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:280, overflow:'hidden', zIndex:0, borderRadius:'0 0 24px 24px' }}>
+        <img src={IMG.hero} alt=""
+          style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 30%', filter:'brightness(0.15)' }} />
+        <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(3,0,7,0.3) 0%, rgba(3,0,7,0.95) 100%)' }} />
+      </div>
         {/* Header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28, flexWrap:'wrap', gap:10 }}>
           <div>
