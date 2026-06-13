@@ -14,7 +14,9 @@ export default function SupabaseAuth() {
           <ArrowLeft size={12}/> Back
         </button>
         <div style={{ textAlign:'center', background:'#0a0a0a', border:'1px solid #1a1a1a', borderRadius:20, padding:'40px 24px' }}>
-          <div style={{ fontSize:52, marginBottom:16 }}>🔐</div>
+          <div style={{ width:64, height:64, borderRadius:18, background:"linear-gradient(135deg,#041f14,#083b27)", border:"1px solid rgba(16,185,129,0.4)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", boxShadow:"0 0 24px rgba(16,185,129,0.15)" }}>
+            <ShieldCheck size={28} color="#34d399" />
+          </div>
           <h2 style={{ fontSize:20, fontWeight:900, color:'white', margin:'0 0 8px' }}>Auth Console</h2>
           <p style={{ fontSize:13, color:'#4b5563', margin:'0 0 20px', lineHeight:1.6 }}>Advanced authentication management. The current auth system is managed via BootProvider.</p>
           
