@@ -14,7 +14,9 @@ export default function ManageAITools() {
           <ArrowLeft size={12}/> Back
         </button>
         <div style={{ textAlign:'center', background:'#0a0a0a', border:'1px solid #1a1a1a', borderRadius:20, padding:'40px 24px' }}>
-          <div style={{ fontSize:52, marginBottom:16 }}>🛠️</div>
+          <div style={{ width:64, height:64, borderRadius:18, background:"linear-gradient(135deg,#1a0a2e,#2d1458)", border:"1px solid rgba(124,58,237,0.4)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", boxShadow:"0 0 24px rgba(124,58,237,0.15)" }}>
+            <Settings2 size={28} color="#a78bfa" />
+          </div>
           <h2 style={{ fontSize:20, fontWeight:900, color:'white', margin:'0 0 8px' }}>Manage AI Tools</h2>
           <p style={{ fontSize:13, color:'#4b5563', margin:'0 0 20px', lineHeight:1.6 }}>Configure and customize the TerrellOS tool library. Tool management interface coming soon.</p>
           
