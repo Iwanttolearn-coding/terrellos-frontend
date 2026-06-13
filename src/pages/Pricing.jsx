@@ -5,7 +5,7 @@
  * Route: /pricing
  */
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import IMG from '@/lib/sectionImages';
 import { resolveUserAccess } from '@/lib/resolveUserAccess';
 import { healthCheck, BACKEND_BASE_URL } from '@/lib/terrellOS';
 import { motion } from 'framer-motion';
