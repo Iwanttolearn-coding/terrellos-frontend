@@ -4,6 +4,7 @@
  * Founder bypasses everything. No church/memorial branding.
  */
 import React from 'react';
+import IMG from '@/lib/sectionImages';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
@@ -70,6 +71,18 @@ export default function Tools() {
 
   return (
     <div className="p-4 lg:p-8 max-w-4xl mx-auto pb-24">
+
+      {/* Tools Hub Banner */}
+      <div style={{ position:"relative", width:"100%", height:160, overflow:"hidden", borderRadius:16, marginBottom:24 }}>
+        <img src={IMG.toolsHub} alt="TerrellOS Tool Library"
+          style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center 40%", filter:"brightness(0.45)" }} />
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,rgba(3,0,7,0.4),rgba(124,58,237,0.25))" }} />
+        <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", justifyContent:"center", padding:"0 24px" }}>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.15em", color:"#a78bfa", textTransform:"uppercase", marginBottom:6 }}>All Tools</div>
+          <div style={{ fontSize:22, fontWeight:900, color:"#fff" }}>TerrellOS Tool Library</div>
+          <div style={{ color:"#c4b5fd", fontSize:12, marginTop:4 }}>Chat · Voice · Builder · Vault · AI Studio · Tattoo</div>
+        </div>
+      </div>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-black text-white">Tool Launcher</h1>
