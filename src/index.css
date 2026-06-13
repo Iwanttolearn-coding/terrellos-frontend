@@ -94,3 +94,40 @@
     border-radius: 3px;
   }
 }
+/* ── Production Polish ─────────────────────────────────────────────────────── */
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #0d0d14; }
+::-webkit-scrollbar-thumb { background: #3b1f7a; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #6d28d9; }
+
+/* Text selection */
+::selection { background: rgba(124,58,237,0.35); color: #fff; }
+
+/* Smooth global transitions */
+*, *::before, *::after { transition-timing-function: cubic-bezier(0.4,0,0.2,1); }
+
+/* Page fade-in */
+#root { animation: rootFadeIn 0.3s ease; }
+@keyframes rootFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Pulse dot utility */
+.pulse-dot {
+  animation: pulseDot 2s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+/* Mobile tap fix */
+button, a { -webkit-tap-highlight-color: transparent; }
