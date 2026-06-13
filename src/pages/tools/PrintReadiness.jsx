@@ -156,7 +156,9 @@ export default function PrintReadiness() {
           {preview
             ? <img src={preview} alt="preview" style={{ maxHeight:160, maxWidth:'100%', borderRadius:8, margin:'0 auto', display:'block' }} />
             : <>
-                <div style={{ fontSize:36, marginBottom:8, opacity:0.3 }}>📄</div>
+                <div style={{ width:44, height:44, borderRadius:12, background:"rgba(124,58,237,0.08)", border:"1px solid rgba(124,58,237,0.2)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 8px", opacity:0.7 }}>
+                <Upload size={20} color="#a78bfa" />
+              </div>
                 <p style={{ color:'#4b5563', fontSize:13, margin:0, fontWeight:600 }}>Drop file here or click to upload</p>
                 <p style={{ color:'#1f2937', fontSize:11, margin:'4px 0 0' }}>PNG · JPG · WEBP · SVG · PDF</p>
               </>
