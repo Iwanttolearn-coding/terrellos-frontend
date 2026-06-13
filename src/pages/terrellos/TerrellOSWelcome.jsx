@@ -5,8 +5,8 @@
  * Real command center. Live backend widgets. No fake data.
  * Boot guard via useBoot() — never renders before hydration.
  */
-import IMG from '@/lib/sectionImages';
 import React, { useState, useEffect, useCallback } from 'react';
+import IMG from '@/lib/sectionImages';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveUserAccess } from '@/lib/resolveUserAccess';
